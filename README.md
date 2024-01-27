@@ -3,7 +3,7 @@
 ---
 
 ### 1 simple rule:
-- use at least 1 thing learned during a course to Bad Apple!!
+- use at least 1 thing learned during a course to play Bad Apple!! (Video and/or Sound)
 
 
 ---
