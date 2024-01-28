@@ -1,5 +1,3 @@
-import time
-
 with open("bad_apple_Original.txt", 'r') as f:
     file = f.read()
 
