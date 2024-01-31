@@ -18,7 +18,7 @@ default 25 : 5*5px to 1chr
 ...
 """
 
-CHARS = np.asarray(list(' .,:;Il!i><~+_-?][}{1)(|tfjrxuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$'))
+CHARS = np.asarray(list(' .,:;+*?%S&$#@'))
 """ .,:;+*?%S&$#@"""
 
 INVERTED = False if input("Invert the video (default white = char, black = no char) (default False) y/n(leave empty) :\n> ") == "" else True
