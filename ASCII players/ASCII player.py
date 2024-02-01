@@ -49,8 +49,8 @@ while i < frame_nbr:
         if to_sleep: time.sleep(sleep_time)
 
  
-print("Duration : {}s".format(int(time.time() - start_time)))
-dropped_frame_percent = int((dropped_frames*100)/frame_nbr)
-excepted_dropped_frame_percent = int((1-(playback_fps/fps))*100)
+print("Duration : {}s".format(round(time.time() - start_time)))
+dropped_frame_percent = round((dropped_frames*100)/frame_nbr)
+excepted_dropped_frame_percent = round((1-(playback_fps/fps))*100)
 
 print("Dropped frames : {} ({}%, excepted dropped frames percentage is {}%)".format(dropped_frames, dropped_frame_percent, excepted_dropped_frame_percent))
