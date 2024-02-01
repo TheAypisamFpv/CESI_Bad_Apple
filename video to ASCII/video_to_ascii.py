@@ -10,8 +10,8 @@ VIDEO_PATH += input("Enter the name of the video you want to convert (must be in
 if not os.path.isfile(VIDEO_PATH):
     raise Exception("The video file doesn't exist")
 
-inputs = input("Resize factor (default 25) :\n> ")
-RESIZE_FACTOR = 25 if inputs == "" else int(inputs)
+inputs = input("Resize factor (default 16) :\n> ")
+RESIZE_FACTOR = 16 if inputs == "" else int(inputs)
 """Determines the number of pixels par character
 ---
 default 25 : 5*5px to 1chr
