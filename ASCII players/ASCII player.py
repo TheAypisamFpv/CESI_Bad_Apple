@@ -13,7 +13,7 @@ size = properties.split("@")[0]
 frame_height = int(size.split("x")[1])
 frame_width = int(size.split("x")[0])
 
-fps = int(properties.split("@")[1].removesuffix("fps").replace(".", ","))
+fps = float(properties.split("@")[1].removesuffix("fps").replace(".", ","))
 
 print(f"please make sure all gathered information is correct:\n\tframe_nbr = {frame_nbr}\n\tframe_height = {frame_height}\n\tframe_width = {frame_width}\n\tfps = {fps}")
 input("Press enter to continue...")
