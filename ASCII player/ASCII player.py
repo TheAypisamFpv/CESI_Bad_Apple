@@ -10,8 +10,8 @@ frame_nbr = int(file_path.split("_")[-3])
 properties = file_path.split("_")[-4]
 
 size = properties.split("@")[0]
-frame_height = int(size.split("x")[0])
-frame_width = int(size.split("x")[1])
+frame_height = int(size.split("x")[1])
+frame_width = int(size.split("x")[0])
 
 fps = int(properties.split("@")[1].removesuffix("fps").split(".")[0])
 
