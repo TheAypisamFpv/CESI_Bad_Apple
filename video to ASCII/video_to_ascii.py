@@ -1,4 +1,4 @@
-import cv2, os
+import cv2, os, tqdm
 import numpy as np
 
 
@@ -10,12 +10,12 @@ VIDEO_PATH += input("Enter the name of the video you want to convert (must be in
 if not os.path.isfile(VIDEO_PATH):
     raise Exception("The video file doesn't exist")
 
-inputs = input("Resize factor (default 16) :\n> ")
-RESIZE_FACTOR = 16 if inputs == "" else int(inputs)
+inputs = input("Resize factor (default 10) (ASCII video will have <RESIZE_FACTOR> times smaller dimension):\n> ")
+RESIZE_FACTOR = 10 if inputs == "" else int(inputs)
 """Determines the number of pixels par character
 ---
 default 25 : 5*5px to 1chr
-...
+
 """
 
 CHARS = np.asarray(list(' .,:;+*?%S&$#@'))
@@ -47,14 +47,15 @@ width, height, fps = 0,0,0
 
 print(f"Converting '{VIDEO_PATH}' to ASCII...")
 frame_nbr = 0
+nbr_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+pgbar = tqdm.tqdm(total=nbr_frames)
+
 while cap.isOpened():
     ret, frame = cap.read()
-    nbr_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    
     if not ret:
         break
 
-    
-    print(f"{int(i/nbr_frames*100):3d}%", end="\r")
     if i % SKIP_FRAMES == 0:
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         frame = cv2.resize(frame, (frame.shape[1]//RESIZE_FACTOR, frame.shape[0]//(RESIZE_FACTOR*2)), interpolation=cv2.INTER_AREA)
@@ -71,6 +72,9 @@ while cap.isOpened():
         if STORAGE_METHOD == 1:
             ascii_frames.append("\n")
     i += 1
+    pgbar.update(1)
+
+pgbar.close()
 
 file_name = "ASCII videos\\" + VIDEO_PATH.split("\\")[-1].split(".")[0] + f"_{width}x{height}@{fps}fps_{frame_nbr}_{STORAGE_METHOD}_{'normal' if not INVERTED else 'inverted'}.txt"
 #save the ASCII frames in a file
