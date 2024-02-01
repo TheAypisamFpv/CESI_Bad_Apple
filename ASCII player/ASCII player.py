@@ -1,29 +1,23 @@
 import time
 
 
-file = ""
 
-if file == "":
-    file_path = input("Enter the name of the file you want to convert (must be in 'ASCII videos' folder):\n> ")
-    with open("ASCII videos\\" + file_path, "r") as f:
-        file = f.read()
+file_path = input("Enter the name of the file you want to convert (must be in 'ASCII videos' folder):\n> ")
+with open("ASCII videos\\" + file_path, "r") as f:
+    file = f.read()
 
-    frame_nbr = int(file_path.split("_")[-3])
-    properties = file_path.split("_")[-4]
-    
-    size = properties.split("@")[0]
-    frame_height = int(size.split("x")[0])
-    frame_width = int(size.split("x")[1])
+frame_nbr = int(file_path.split("_")[-3])
+properties = file_path.split("_")[-4]
 
-    fps = int(properties.split("@")[1].removesuffix("fps").split(".")[0])
+size = properties.split("@")[0]
+frame_height = int(size.split("x")[0])
+frame_width = int(size.split("x")[1])
 
-    print(f"please make sure all gathered information is correct:\n\tframe_nbr = {frame_nbr}\n\tframe_height = {frame_height}\n\tframe_width = {frame_width}\n\tfps = {fps}")
-    input("Press enter to continue...")
-else:
-    frame_nbr = 6573
-    fps = 30
-    frame_width = 88
-    frame_height = 33
+fps = int(properties.split("@")[1].removesuffix("fps").split(".")[0])
+
+print(f"please make sure all gathered information is correct:\n\tframe_nbr = {frame_nbr}\n\tframe_height = {frame_height}\n\tframe_width = {frame_width}\n\tfps = {fps}")
+input("Press enter to continue...")
+
 
 playback_fps = fps #this will not alter the video lenght, but only render at that frame rate
 sleep_time = 1/(playback_fps*2)
