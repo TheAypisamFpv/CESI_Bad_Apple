@@ -94,7 +94,7 @@ while cap.isOpened():
         if not COLOR:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        frame = cv2.resize(frame, (frame.shape[1]//RESIZE_FACTOR, frame.shape[0]//(RESIZE_FACTOR*2)), interpolation=cv2.INTER_AREA)
+        frame = cv2.resize(frame, (round(frame.shape[1]//RESIZE_FACTOR), round(frame.shape[0]//(RESIZE_FACTOR*2))), interpolation=cv2.INTER_AREA)
 
         frame_nbr += 1
         
