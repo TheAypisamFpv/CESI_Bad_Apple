@@ -117,7 +117,8 @@ def VisualizeTemporalGraph(TemporalGraph:Graph, fps:float):
     print("\nVisualizing the temporal graph in 2D...")
 
     # Create a 2D plot
-    fig, ax = plt.subplots(figsize=(24, 16))
+    fig, ax = plt.subplots()
+    plt.axis('off')
 
     # Manually position nodes in a line along the x-axis
     pos = {node: (node * 5, 0) for node in TemporalGraph.nodes}  # x increases for each node, y = 0
@@ -181,7 +182,7 @@ def VisualizeTemporalGraph(TemporalGraph:Graph, fps:float):
     
 
     # Create the animation
-    ani = animation.FuncAnimation(fig, update, frames=len(TemporalGraph.nodes), interval=int(1000/fps), repeat=False)
+    ani = animation.FuncAnimation(fig, update, frames=len(TemporalGraph.nodes), interval=int(1/fps), repeat=False)
 
     plt.legend()
     plt.show()
@@ -246,3 +247,4 @@ def main():
 if __name__ == "__main__":
     LoadedTemporalGraph, LoadedFrames, fps = LoadTemporalGraph()
     PlayVideoWithTemporalGraph(TemporalGraph=LoadedTemporalGraph, fps=fps)
+    # VisualizeTemporalGraph(TemporalGraph=LoadedTemporalGraph, fps=fps)
