@@ -14,7 +14,7 @@
 - **Updated version** : now runs in real time !
 
 ## Web Project (HTML , CSS & JavaScript)
-### [Using JavaScript to change text](https://www.youtube.com/watch?v=8aGhZQkoFbQ)
+### Using JavaScript to change text
 - JavaScript script that change paragraphe text each frame to play Bad Apple, and plays sound.
 > **PHP file** : https://github.com/Yug0-o/Projet-WEB/blob/dev/Bad_Apple.php
 
