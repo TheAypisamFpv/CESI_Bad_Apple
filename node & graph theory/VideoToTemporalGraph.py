@@ -117,7 +117,7 @@ def VisualizeTemporalGraph(TemporalGraph:Graph, fps:float):
     print("\nVisualizing the temporal graph in 2D...")
 
     # Create a 2D plot
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(24, 16))
 
     # Manually position nodes in a line along the x-axis
     pos = {node: (node * 5, 0) for node in TemporalGraph.nodes}  # x increases for each node, y = 0
@@ -192,34 +192,31 @@ def PlayVideoWithTemporalGraph(TemporalGraph:Graph, fps:float):
     Plays the video by traversing the temporal graph and displaying frames.
     """
     print("\nPlaying the video using the temporal graph...")
-    
-    StartTime = time.time()  # Track overall start time
+
+    plt.figure(num='Bad Apple!! with Temporal Graph')
+
     CurrentNode = 0
     SkipedFrames = 0
-    
+    StartTime = time.time() + 0.1  # Start time with a small delay to avoid skipping the first frame due to plt window creation time
     while CurrentNode in TemporalGraph.nodes:
-        CurrentTime = time.time()
-        ElapsedTime = CurrentTime - StartTime
-        
         # Calculate the expected frame index based on elapsed time and fps
-        ExpectedFrameIndex = int(ElapsedTime * fps)
-        
+        ExpectedFrameIndex = round((time.time() - StartTime) * fps)
+    
         # Skip frames to catch up to the expected frame index
-        while CurrentNode < ExpectedFrameIndex and CurrentNode in TemporalGraph.nodes:
-            CurrentNode += 1
-            SkipedFrames += 1
-        
-        if CurrentNode in TemporalGraph.nodes:
-            frame = TemporalGraph.nodes[CurrentNode]['frame']
-            plt.imshow(frame, cmap='gray')
-            plt.axis('off')
-            plt.show(block=False)
-            plt.pause(0.001)  # Short pause to allow frame display
-            plt.clf()
-            CurrentNode += 1  # Move to the next node
+        if CurrentNode < ExpectedFrameIndex:
+            SkipedFrames += (ExpectedFrameIndex - CurrentNode)
+            CurrentNode = ExpectedFrameIndex
+    
+        frame = TemporalGraph.nodes[CurrentNode]['frame']
+        plt.imshow(frame, cmap='gray')
+        plt.axis('off')
+        plt.show(block=False)
+        plt.pause(0.0005)  # Short pause to allow frame display
+        plt.clf()
+        CurrentNode += 1  # Move to the next node
 
-        if SkipedFrames % 50 == 0:
-            print(f"Frames drop: {SkipedFrames}/{CurrentNode} ({((SkipedFrames*100)/CurrentNode):.2f}%)", end='\r')
+        # if CurrentNode % 50 == 0:
+        #     print(f"Frames drop: {SkipedFrames}/{CurrentNode} ({((SkipedFrames*100)/CurrentNode):.2f}%)", end='\r')
 
     print(f"Frames drop: {SkipedFrames}/{CurrentNode} ({((SkipedFrames*100)/CurrentNode):.2f}%)", end='\n\n')
 
