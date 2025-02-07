@@ -1,2 +1,12 @@
 **.mp4
 **.pkl
+**.pt
+
+# Virtual Environment
+/.venv
+
+# Python cache
+__pycache__/
+
+# csv files
+**.csv

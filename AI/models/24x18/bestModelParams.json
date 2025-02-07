@@ -1,0 +1,21 @@
+{
+    "layers": [
+        432,
+        3888,
+        7344,
+        10800
+    ],
+    "dropoutRates": [
+        0.2
+    ],
+    "l2Reg": 0.001,
+    "learningRate": 0.005832,
+    "inputActivation": "relu",
+    "hiddenActivation": "relu",
+    "outputActivation": "relu",
+    "loss": "l1",
+    "optimizer": "adam",
+    "batch_size": 300,
+    "epochs": 500,
+    "fitness": 0.6360479247074787
+}

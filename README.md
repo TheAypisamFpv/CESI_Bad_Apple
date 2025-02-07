@@ -27,3 +27,10 @@
 *This course has barely started, and yet I've already completed it because I was bored*
 - Implementation of a temporal graph to visualize each frame, represented as a node, with edges representing transitions between consecutive frames.
 > **Python file** : https://github.com/TheAypisamFpv/CESI_Bad_Apple/blob/GraphTheory/node%20%26%20graph%20theory/VideoToTemporalGraph.py
+
+## AI *(Video once all bugs are fixed)*
+- Scripts for converting video frames to CSV (`videoTofeatures.py`), training neural networks (`trainNeuralNet.py`), and playing predicted outputs (`AiVideoPlayer.py`).
+- Each file demonstrates a different step in the AI pipeline: data preparation, model training, and frame prediction.
+
+### BUG TO FIX : 
+- #### Memory leak when running Neural Evolution (possibly fixed by killing parrallel processes)
