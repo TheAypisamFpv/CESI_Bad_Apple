@@ -2,13 +2,13 @@
     "layers": [
         432,
         3888,
-        7344,
+        1105,
         10800
     ],
     "dropoutRates": [
-        0.2
+        0.269765
     ],
-    "l2Reg": 0.001,
+    "l2Reg": 7.6e-05,
     "learningRate": 0.005832,
     "inputActivation": "relu",
     "hiddenActivation": "relu",
@@ -17,5 +17,5 @@
     "optimizer": "adam",
     "batch_size": 300,
     "epochs": 500,
-    "fitness": 0.6360479247074787
+    "fitness": 0.8331274650664864
 }

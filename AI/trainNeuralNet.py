@@ -473,10 +473,10 @@ def neuralEvolution(XTrain, yTrain, XTest, yTest, initialParams, generations=50,
     totalTime = 0.0
     completion = 0.0
 
-    print(" " * len(str([0] * numParallelWorkers)) + " |" + " " * 50 +
+    print(" " * len(str([0] * numParallelWorkers)) + " |" + " " * 60 +
           f"gen 0/{generations} : " +
           getProgressBar(completion, wheelIndex=progressWheelIndex) + 
-          f"Best Accuracy: {population[0]['fitness'] * 100:.2f}% / {bestIndividual['fitness'] * 100:.2f}%  |  Time remaining: --h--min --s  -  est. Finish Time: --h-- ", end='\r')
+          f"Best Accuracy: --.--% / {bestIndividual['fitness'] * 100:.2f}%  |  Time remaining: --h--min --s  -  est. Finish Time: --h-- ", end='\r')
 
     for generation in range(generations):
         startTime = pd.Timestamp.now()
@@ -537,7 +537,7 @@ def neuralEvolution(XTrain, yTrain, XTest, yTest, initialParams, generations=50,
         else:
             estFinishTimeStr = f"{estFinishTime.hour:02}h{estFinishTime.minute:02}"
 
-        print(" " * len(str([0] * numParallelWorkers)) + " |" + " " * 50 +
+        print(" " * len(str([0] * numParallelWorkers)) + " |" + " " * 60 +
               f"gen {generation + 1}/{generations} : " +
               getProgressBar(completion, wheelIndex=progressWheelIndex) + 
               f"Best Accuracy: {newPopulation[0]['fitness'] * 100:.2f}% / {bestIndividual['fitness'] * 100:.2f}%  |  Time remaining: {estTimeStr}  -  est. Finish Time: {estFinishTimeStr} ", end='\r')
@@ -657,7 +657,7 @@ if __name__ == '__main__':
     }
     
 
-    useBestModel = False
+    useBestModel = True
 
     # check if there is a saved best model
     if os.path.isfile(bestParamsPath) and useBestModel:
