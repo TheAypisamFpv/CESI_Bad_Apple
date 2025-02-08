@@ -8,11 +8,7 @@ import json
 predefinedWidth = 480
 predefinedHeight = 360
 
-def displayFrame(frameId, frame, width, height):
-    # Resize the frame to a predefined size (e.g., 960x720)
-    frame = cv2.resize(frame, (width, height))
-    cv2.imshow('Video Frame', frame)
-    cv2.waitKey(1)  # Display the frame for 1 ms
+
 class NeuralNet(nn.Module):
     def __init__(self, layers, dropoutRates, l2Reg, inputActivation, hiddenActivation, outputActivation):
         super(NeuralNet, self).__init__()
@@ -56,6 +52,13 @@ class NeuralNet(nn.Module):
             x = layer(x)
         return x
 
+
+def displayFrame(frameId, frame, width, height):
+    # Resize the frame to a predefined size (e.g., 960x720)
+    frame = cv2.resize(frame, (width, height))
+    cv2.imshow('Video Frame', frame)
+    cv2.waitKey(1)  # Display the frame for 1 ms
+
 def main():
     modelPath = r'D:\VS_Python_Project\CESI_Bad_Apple\AI\models\24x18\bestModel.pt'
     paramsPath = r'D:\VS_Python_Project\CESI_Bad_Apple\AI\models\24x18\bestModelParams.json'
@@ -80,16 +83,7 @@ def main():
 
     print("Loading model...", end=' ')
     # Load model
-    model = NeuralNet(
-        layers=bestParams['layers'],
-        dropoutRates=bestParams['dropoutRates'],
-        l2Reg=bestParams['l2Reg'],
-        inputActivation=bestParams['inputActivation'],
-        hiddenActivation=bestParams['hiddenActivation'],
-        outputActivation=bestParams['outputActivation']
-    )
-    state_dict = torch.load(modelPath, map_location=torch.device('cpu'))
-    model.load_state_dict(state_dict)
+    model = torch.load(modelPath, weights_only=False, map_location=torch.device('cpu'))
     model.eval()
     print("Done\n")
 
@@ -118,7 +112,7 @@ def main():
             inputTensor = torch.tensor([inputFrame], dtype=torch.float32)
             
             with torch.no_grad():
-                prediction = model(inputTensor).numpy()
+                prediction = model(inputTensor).numpy()# * 255.0
     
             # Reshape the predicted output to an image
             predictedFrame = prediction.reshape((outputHeight, outputWidth, channels))

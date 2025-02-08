@@ -73,9 +73,10 @@ class NeuralNet(nn.Module):
 
     def fit(self, trainLoader, testLoader, optimizer, lossFn, epochs, device, index=0):
         bestAcc = -float("inf")
-        patience = 25
+        patience = 750
         patienceCounter = 0
-        patienceThreshold = 0.05 / 100  # not used heavily in this snippet
+        patienceThreshold = 0.05 / 100
+        correctThreshold = 0.05
 
         for epoch in range(epochs):
             self.train()
@@ -94,13 +95,15 @@ class NeuralNet(nn.Module):
                 for XBatch, yBatch in testLoader:
                     XBatch, yBatch = XBatch.to(device, non_blocking=True), yBatch.to(device, non_blocking=True)
                     outputs = self(XBatch)
-                    error = torch.abs(outputs - yBatch)
-                    # Compute "correct" for each prediction as 1 - 2*error.
-                    correct = 1 - 2 * error
-                    totalAccuracy += correct.sum().item()
-                    totalCount += correct.numel()
-
+                    errors = torch.abs(outputs - yBatch)
+                    corrects = (errors < correctThreshold).float()
+                    # print(f"Correct: {corrects.sum().item():.4f}")
+                    totalAccuracy += corrects.sum().item()
+                    totalCount += corrects.numel() 
+                    # print(f"Batch correct: {correct.sum().item():.4f}  Total Accuracy So Far: {totalAccuracy:.4f}  Total Count So Far: {totalCount:.0f}")
+                    
             accuracy = totalAccuracy / totalCount
+            
 
             # Update best accuracy with patience
             if accuracy - bestAcc > patienceThreshold:
@@ -109,7 +112,8 @@ class NeuralNet(nn.Module):
             else:
                 patienceCounter += 1
 
-            print(f"[{index}] | Epoch {epoch + 1}/{epochs} (Accuracy: {accuracy*100:.2f}%) (patience: {patience - patienceCounter})..." + " " * 5, end="\r")
+            print(f"[{index}] | Epoch {epoch + 1}/{epochs} (Acc: {accuracy*100:.2f}%) (patience: {patience - patienceCounter})..." + " " * 5, end="\r")
+            
             if patienceCounter >= patience:
                 break
 
@@ -132,7 +136,7 @@ def preprocessData(data):
     resizedFrameData = np.stack(data['resizedFrameData'].values)
     originalFrameData = np.stack(data['originalFrameData'].values)
     
-    print("done.")
+    print(f"done. (data length: {len(data)})")
     return resizedFrameData, originalFrameData
 
 def createModel(layers, dropoutRates, l2Reg, learningRate, inputActivation, hiddenActivation, outputActivation, loss, optimizer):
@@ -144,14 +148,33 @@ def createModel(layers, dropoutRates, l2Reg, learningRate, inputActivation, hidd
         optimizer = optim.Adam(model.parameters(), lr=learningRate, weight_decay=l2Reg)
     elif optimizer == 'sgd':
         optimizer = optim.SGD(model.parameters(), lr=learningRate, weight_decay=l2Reg)
+    elif optimizer == 'adagrad':
+        optimizer = optim.Adagrad(model.parameters(), lr=learningRate, weight_decay=l2Reg)
     # Add other optimizers as needed
 
     if loss == 'binary_crossentropy':
         loss = nn.BCELoss()
+        
     elif loss == 'mse':
         loss = nn.MSELoss()
+        
+    elif loss == 'smoothl1':
+        loss = nn.SmoothL1Loss()
+        
     elif loss == 'l1':
         loss = nn.L1Loss()
+        
+    elif loss == 'huber':
+        loss = nn.HuberLoss()
+        
+    elif loss == 'crossentropy':
+        loss = nn.CrossEntropyLoss()
+        
+    elif loss == 'nll':
+        loss = nn.NLLLoss()
+        
+    elif loss == 'poisson':
+        loss = nn.PoissonNLLLoss()
     # Add other loss functions as needed
 
     return model, optimizer, loss, device
@@ -191,6 +214,9 @@ def evaluateIndividual(params, XTrain, yTrain, XTest, yTest, populationSize, ind
 
     params['fitness'] = bestValAccuracy
 
+    model = model.cpu()
+    params['model'] = model
+
     del model
     del trainLoader
     del testLoader
@@ -225,7 +251,7 @@ def worker(paramsIndex: tuple):
         with queueLock:
             workerQueue.remove(index)  # Remove from active workers after completion
 
-def evaluatePopulation(population: list[dict], XTrain, yTrain, XTest, yTest, cpuPowerLimit: float, nJobs: int):
+def evaluatePopulation(population: list[dict], XTrain, yTrain, XTest, yTest, cpuPowerLimit: float, nJobs: int) -> list[dict]:
     print("Evaluating population..." + " " * 5, end="\r")
 
     manager = Manager()
@@ -254,6 +280,8 @@ def evaluatePopulation(population: list[dict], XTrain, yTrain, XTest, yTest, cpu
 def crossover(parent1: dict, parent2: dict):
     child = {}
     for key in parent1.keys():
+        if key.lower() in ['model']: # Skip the model
+            child[key] = None
         if np.random.rand() < 0.5:
             child[key] = parent1[key]
         else:
@@ -272,8 +300,9 @@ def mutate(child: dict, mutationRate: float, mutationForce: float):
     
     optimizerChoices = ['adam', 'sgd']
     activationChoices = ['relu', 'sigmoid', 'tanh']
+    lossChoices = ['binary_crossentropy', 'mse', 'smoothl1', 'l1', 'huber', 'crossentropy', 'nll', 'poisson']
 
-    noMutationKeys = ['fitness']
+    noMutationKeys = ['fitness', 'model']
 
 
     def getMutatedValue(value):
@@ -354,10 +383,10 @@ def mutate(child: dict, mutationRate: float, mutationForce: float):
     if child['loss'] == 'binary_crossentropy':
         child['outputActivation'] = 'sigmoid'
 
-    # elif randomKey.lower() in ['batch_size', 'epochs']:
-    #     print(f"Mutating {randomKey}... " + " "*20, end="\r") # Debug
-    #     child[randomKey] = int(np.clip(getMutatedValue(child[randomKey]), 20, None))
-        
+    elif randomKey.lower() in ['epochs']:
+        print(f"Mutating {randomKey}... " + " "*20, end="\r") # Debug
+        child[randomKey] = int(np.clip(getMutatedValue(child[randomKey]), 150, None))
+
 
     # time.sleep(1) # Debug
 
@@ -381,40 +410,14 @@ def convertNumpyTypes(obj):
         return obj
 
 
-def saveBestModel(modelPath, bestParams, XTrain, yTrain, XTest, yTest):
-    print("Training best model...                 ", end="\r")
-
-    model, optimizer, lossFn, device = createModel(
-        layers=bestParams['layers'],
-        dropoutRates=bestParams['dropoutRates'],
-        l2Reg=bestParams['l2Reg'],
-        learningRate=bestParams['learningRate'],
-        inputActivation=bestParams['inputActivation'],
-        hiddenActivation=bestParams['hiddenActivation'],
-        outputActivation=bestParams['outputActivation'],
-        loss=bestParams['loss'],
-        optimizer=bestParams['optimizer']
-    )
-
-    trainDataset = TensorDataset(torch.tensor(XTrain, dtype=torch.float32), torch.tensor(yTrain, dtype=torch.float32))
-    testDataset = TensorDataset(torch.tensor(XTest, dtype=torch.float32), torch.tensor(yTest, dtype=torch.float32))
-
-    trainLoader = DataLoader(trainDataset, batch_size=bestParams['batch_size'], shuffle=True, pin_memory=True)
-    testLoader = DataLoader(testDataset, batch_size=bestParams['batch_size'], shuffle=True, pin_memory=True)
-
-    bestValAccuracy = model.fit(
-        trainLoader,
-        testLoader,
-        optimizer,
-        lossFn,
-        bestParams['epochs'],
-        device
-        )
+def saveBestModel(modelPath: str, bestParams: dict):
+    model = bestParams['model']
 
     print(f"Saving best model... ", end="\r")
-    torch.save(model.state_dict(), modelPath)
+    torch.save(model, modelPath)
     bestParamsPath = modelPath.removesuffix('.pt') + 'Params.json'
 
+    bestParams['model'] = bestParamsPath
 
     bestParams = {k: convertNumpyTypes(v) for k, v in bestParams.items()}
 
@@ -422,7 +425,7 @@ def saveBestModel(modelPath, bestParams, XTrain, yTrain, XTest, yTest):
         json.dump(bestParams, f, indent=4)
 
     print("Best model saved.     ", end="\r")
-    return model
+    return bestParams
 
 def saveHistory(generationHistory: list, historyPath):
 
@@ -478,37 +481,51 @@ def neuralEvolution(XTrain, yTrain, XTest, yTest, initialParams, generations=50,
           getProgressBar(completion, wheelIndex=progressWheelIndex) + 
           f"Best Accuracy: --.--% / {bestIndividual['fitness'] * 100:.2f}%  |  Time remaining: --h--min --s  -  est. Finish Time: --h-- ", end='\r')
 
+    
     for generation in range(generations):
         startTime = pd.Timestamp.now()
 
-        topPopulation = population[:max(4, populationSize // 10)]
+        topPopulation:list[dict] = population[:max(4, populationSize // 10)]
 
         newPopulation = []
-        for _ in range(populationSize):
-            print(f"Mutating individual {len(newPopulation) + 1}/{populationSize}... " + " "*25, end="\r")
-            parent1, parent2 = np.random.choice(topPopulation, size=2, replace=False)
-
-            child = crossover(parent1, parent2)
-
-            child = mutate(child, mutationRate, mutationForce)
-
+        if populationSize == 1:
+            child = mutate(bestIndividual, mutationRate, mutationForce)
             newPopulation.append(child)
+        else:
+            for _ in range(populationSize):
+                print(f"Mutating individual {len(newPopulation) + 1}/{populationSize}... " + " "*25, end="\r")
+                parent1, parent2 = np.random.choice(topPopulation, size=2, replace=False)
+
+                child = crossover(parent1, parent2)
+
+                child = mutate(child, mutationRate, mutationForce)
+
+                newPopulation.append(child)
+
 
         newPopulation = evaluatePopulation(newPopulation, XTrain, yTrain, XTest, yTest, cpuPowerLimit, numParallelWorkers)
 
         population = topPopulation + newPopulation
+            
 
-        population.sort(key=lambda x: x['fitness'], reverse=True)
+        # Combine fitness with a penalty for hidden neurons:
+        # Fewer neurons are better when accuracies are similar.
+        penaltyFactor = 0.0001  # Adjust this factor as needed
+        population.sort(key=lambda x: x['fitness'] - penaltyFactor * sum(x['layers'][1:-1]), reverse=True)
 
         # Keep the same population size
         population = population[:populationSize]
 
-        generationHistory.append(population[0].copy())
-        saveHistory(generationHistory, historyPath) # TODO bug fix
+        tempPopulation = population[0].copy()
+        tempPopulation['model'] = modelPath
+        generationHistory.append(tempPopulation)
+        saveHistory(generationHistory, historyPath) # TODO bug fix ?
 
-        if population[0]['fitness'] > bestIndividual['fitness']:
-            bestIndividual = population[0]
-            saveBestModel(modelPath, bestIndividual, XTrain, yTrain, XTest, yTest)
+        if population[0]['fitness'] >= bestIndividual['fitness'] or populationSize == 1:
+            bestIndividual = saveBestModel(modelPath, bestIndividual)
+
+
+        # Print progress
 
         progressWheelIndex += 1
         completion = progressWheelIndex / generations
@@ -564,7 +581,7 @@ def plotResults(history):
 
     plt.show()
 
-if __name__ == '__main__':
+def main():
     # Check if GPU is available
     print("System Information:")
     print("PyTorch version:", torch.__version__)
@@ -594,11 +611,15 @@ if __name__ == '__main__':
 
     # Start memory profiler
     tracemalloc.start()
-    # Main script
-    csvPath = 'D:\VS_Python_Project\CESI_Bad_Apple\AI\Bad Apple!!_24x18.csv'
 
-    csvRoot, csvName = csvPath.rsplit('\\', 1)
-    csvName = csvName.removesuffix('.csv')
+    rootDir = os.path.dirname(os.path.abspath(__file__))
+    
+    csvPath = os.path.join(rootDir, 'Bad Apple!!_24x18.csv')
+    if not os.path.isfile(csvPath):
+        print("Dataset not found. Please generate the dataset using the 'videoToFeatures.py' script.")
+        exit(1)
+    
+    csvName = os.path.basename(csvPath).removesuffix('.csv')
     csvParam = csvName.split('_')[-1]
     width, height = csvParam.split('x')
     try:
@@ -607,14 +628,16 @@ if __name__ == '__main__':
     except ValueError:
         print(f"Invalid video parameter: {csvParam}")
         exit(1)
-
-
-    baseDir = csvRoot + f"\\models\\{width}x{height}\\"
-
-    bestParamsPath = baseDir + 'bestModelParams.json'
-    historyPath = baseDir + 'generationHistory.json'
-
-    modelPath = baseDir + 'bestModel.pt'
+    
+    # Create the base directory relative to the python file root
+    baseDir = os.path.join(rootDir, "models", f"{width}x{height}")
+    if not os.path.isdir(baseDir):
+        print(f"Model directory not found. Creating directory: {baseDir}")
+        os.makedirs(baseDir)
+    
+    bestParamsPath = os.path.join(baseDir, 'bestModelParams.json')
+    historyPath = os.path.join(baseDir, 'generationHistory.json')
+    modelPath = os.path.join(baseDir, 'bestModel.pt')
 
     # check if the model directory exists
     if not os.path.isdir(baseDir):
@@ -642,7 +665,7 @@ if __name__ == '__main__':
             outputNeurons
         ],
         'dropoutRates': [
-            0.2
+            0.01
         ],
         'l2Reg': 0.001,
         'learningRate': 0.01,
@@ -651,12 +674,12 @@ if __name__ == '__main__':
         'outputActivation': 'relu',
         'loss': 'l1',
         'optimizer': 'adam',
-        'batch_size': 100,
-        'epochs': 500,
+        'batch_size': 6000,
+        'epochs': 150,
         'fitness': 0.0
     }
     
-
+    
     useBestModel = True
 
     # check if there is a saved best model
@@ -676,12 +699,14 @@ if __name__ == '__main__':
         print(f"- Output neurons: {outputNeurons}")
 
 
-    generations = 25
-    populationSize = 10
-    mutationRate = 0.6 # percentage of the population that will have one of their parameters mutated (does not include the parents of the population)
+    generations = 5
+    populationSize = 1
+    mutationRate = 0.8 # percentage of the population that will have one of their parameters mutated (does not include the parents of the population)
     mutationForce = 0.2 # will mutate numerical values by a factor of 1 +/- mutationForce
     cpuPowerLimit = 0.85
     nJobs = 1
+
+
     
     bestParams, generationHistory = neuralEvolution(XTrain=XTrain,
                                                     yTrain=yTrain,
@@ -701,3 +726,11 @@ if __name__ == '__main__':
     saveHistory(generationHistory, historyPath)
 
     print("Neuro-Evolution completed." + " " * 50)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\nNeuro-Evolution interrupted.")
+        exit(1)

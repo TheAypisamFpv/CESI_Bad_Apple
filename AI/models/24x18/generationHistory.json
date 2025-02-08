@@ -2,43 +2,43 @@
     {
         "layers": [
             432,
-            6883,
-            1105,
+            5947,
             10800
         ],
         "dropoutRates": [
-            0.403133
+            0.000568
         ],
-        "l2Reg": 7.6e-05,
-        "learningRate": 0.005832,
+        "l2Reg": 2e-06,
+        "learningRate": 0.000613,
         "inputActivation": "relu",
         "hiddenActivation": "relu",
         "outputActivation": "relu",
-        "loss": "l1",
+        "loss": "huber",
         "optimizer": "adam",
-        "batch_size": 300,
-        "epochs": 500,
-        "fitness": 0.8331274650664864
+        "batch_size": 1000,
+        "epochs": 1000,
+        "fitness": 0.8841381658027195,
+        "model": "d:\\VS_Python_Project\\CESI_Bad_Apple\\AI\\models\\24x18\\bestModel.pt"
     },
     {
         "layers": [
             432,
-            6883,
-            1105,
+            5947,
             10800
         ],
         "dropoutRates": [
-            0.403133
+            0.000568
         ],
-        "l2Reg": 7.6e-05,
-        "learningRate": 0.005832,
+        "l2Reg": 2e-06,
+        "learningRate": 0.000613,
         "inputActivation": "relu",
         "hiddenActivation": "relu",
         "outputActivation": "relu",
-        "loss": "l1",
+        "loss": "huber",
         "optimizer": "adam",
-        "batch_size": 300,
-        "epochs": 500,
-        "fitness": 0.8331274650664864
+        "batch_size": 1000,
+        "epochs": 1000,
+        "fitness": 0.8926075708061002,
+        "model": "d:\\VS_Python_Project\\CESI_Bad_Apple\\AI\\models\\24x18\\bestModel.pt"
     }
 ]

@@ -1,3 +1,4 @@
+import os
 import cv2
 import pandas as pd
 
@@ -112,9 +113,10 @@ def videoToCsv(videoPath:str, outputCsv:str, initialScalingFactor:float=1.0, oup
 
 
 if __name__ == '__main__':
+    rootDir = os.path.dirname(os.path.abspath(__file__))
     videoPath = 'D:/VS_Python_Project/CESI_Bad_Apple/Bad Apple!!.mp4'
     initialScalingFactor = 0.05
     ouputScalingFactor = 0.25
     frameSkip = 1
-    outputCsv = 'D:/VS_Python_Project/CESI_Bad_Apple/AI/Bad Apple!!.csv'
+    outputCsv = os.path.join(rootDir, 'Bad Apple!!.csv')
     videoToCsv(videoPath=videoPath, outputCsv=outputCsv, initialScalingFactor=initialScalingFactor, ouputScalingFactor=ouputScalingFactor, frameSkip=frameSkip)
