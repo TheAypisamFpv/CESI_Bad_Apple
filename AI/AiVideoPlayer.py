@@ -2,55 +2,13 @@ import cv2
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
 import json
+import time
+from trainNeuralNet import NeuralNet
 
 predefinedWidth = 480
 predefinedHeight = 360
 
-
-class NeuralNet(nn.Module):
-    def __init__(self, layers, dropoutRates, l2Reg, inputActivation, hiddenActivation, outputActivation):
-        super(NeuralNet, self).__init__()
-        self.layers = nn.ModuleList()
-        self.dropoutRates = dropoutRates
-        self.l2Reg = l2Reg
-
-        # Add input layer
-        self.layers.append(nn.Linear(layers[0], layers[1]))
-        self.layers.append(self.getActivation(inputActivation))
-        self.layers.append(nn.BatchNorm1d(layers[1]))
-        self.layers.append(nn.Dropout(dropoutRates[0]))
-
-        # Add hidden layers
-        for i in range(1, len(layers) - 2):
-            self.layers.append(nn.Linear(layers[i], layers[i + 1]))
-            self.layers.append(self.getActivation(hiddenActivation))
-            self.layers.append(nn.BatchNorm1d(layers[i + 1]))
-            dropoutRateIndex = min(i, len(dropoutRates) - 1)
-            self.layers.append(nn.Dropout(dropoutRates[dropoutRateIndex]))
-
-        # Add output layer
-        self.layers.append(nn.Linear(layers[-2], layers[-1]))
-        self.layers.append(self.getActivation(outputActivation))
-
-    def getActivation(self, activation):
-        if activation == 'relu':
-            return nn.ReLU()
-        elif activation == 'sigmoid':
-            return nn.Sigmoid()
-        elif activation == 'tanh':
-            return nn.Tanh()
-        else:
-            raise ValueError(f"Unsupported activation function: {activation}")
-
-    def forward(self, x):
-        for layer in self.layers:
-            if isinstance(layer, nn.BatchNorm1d):
-                if x.size(0) == 1:
-                    continue  # Skip batch normalization if batch size is 1
-            x = layer(x)
-        return x
 
 
 def displayFrame(frameId, frame, width, height):
@@ -60,7 +18,7 @@ def displayFrame(frameId, frame, width, height):
     cv2.waitKey(1)  # Display the frame for 1 ms
 
 def main():
-    modelPath = r'D:\VS_Python_Project\CESI_Bad_Apple\AI\models\24x18\bestModel.pt'
+    modelPath = r'D:\VS_Python_Project\CESI_Bad_Apple\AI\models\24x18\goodStart\bestModel.pt'
     paramsPath = r'D:\VS_Python_Project\CESI_Bad_Apple\AI\models\24x18\bestModelParams.json'
     sizeCsvPath = r'D:\VS_Python_Project\CESI_Bad_Apple\AI\Bad Apple!!_size.csv'
     dataCsvPath = r'D:\VS_Python_Project\CESI_Bad_Apple\AI\Bad Apple!!_24x18.csv'
@@ -82,8 +40,12 @@ def main():
     print(f"Output frame size: {outputWidth}x{outputHeight}")
 
     print("Loading model...", end=' ')
+
+    device = torch.device('cpu')
+    
     # Load model
-    model = torch.load(modelPath, weights_only=False, map_location=torch.device('cpu'))
+    model = torch.load(modelPath, weights_only=False)
+    model = model.to(device)
     model.eval()
     print("Done\n")
 
@@ -96,47 +58,50 @@ def main():
 
     input("Press Enter to start the video...")
 
+    numDigits = len(str(len(inputFrames)))
 
     channels = 1  # Grayscale
 
     frameId = 0
     fps = 30
-    frameSkip = 1
+    frameDuration = 1 / fps  # Duration in seconds for each frame
     try:
         while frameId < len(inputFrames):
-            frameStart = cv2.getTickCount()
+            startTime = time.time()
             # Get the input frame
             inputFrame = inputFrames[frameId]
             # Reshape input frame using the original input dimensions
             inputFrameReshaped = inputFrame.reshape((int(inputHeight), int(inputWidth)))
-            inputTensor = torch.tensor([inputFrame], dtype=torch.float32)
+            inputTensor = torch.from_numpy(inputFrame).pin_memory().unsqueeze(0).float().to(device, non_blocking=True)
             
             with torch.no_grad():
-                prediction = model(inputTensor).numpy()# * 255.0
+                prediction = model(inputTensor).cpu().numpy()* 50.0
     
             # Reshape the predicted output to an image
             predictedFrame = prediction.reshape((outputHeight, outputWidth, channels))
     
             # Display predicted frame
-            print(f"Frame ID: {frameId}")
             displayFrame(frameId, predictedFrame, predefinedWidth, predefinedHeight)
     
             # Additionally, display input frame in a separate, smaller window.
             inputImage = cv2.resize(inputFrameReshaped, (predefinedWidth//2, predefinedHeight//2))
             cv2.imshow("Input Video", inputImage)
 
-            # Calculate the time taken to process the frame, and how much time to wait before displaying the next frame
-            frameEnd = cv2.getTickCount()
-            frameTime = (frameEnd - frameStart) / cv2.getTickFrequency()
-            waitTime = max(1, int(1000 / fps - frameTime * 1000))
-            key = cv2.waitKey(waitTime * frameSkip)
-                
+            # Calculate elapsed time and sleep for the remaining frame duration.
+            elapsed = time.time() - startTime
+            remaining = max(0, (frameDuration - elapsed))
+            time.sleep(remaining)
+            cv2.waitKey(1)  # minimal wait to allow window refresh
+
+
+            print(f"Frame ID: {frameId:0{numDigits}d}  |  Prediction time: {elapsed:.3f}s  |  fps: {1 / (elapsed + remaining):.1f}", end='\r')
     
             # Increment frame ID for the next prediction
             frameId += 1
     except KeyboardInterrupt:
         pass
     finally:
+        print("\nVideo playback stopped")
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":

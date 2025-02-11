@@ -9,16 +9,17 @@
             0.000568
         ],
         "l2Reg": 2e-06,
-        "learningRate": 0.000613,
-        "inputActivation": "relu",
+        "learningRate": 0.003,
+        "inputActivation": "tanh",
         "hiddenActivation": "relu",
-        "outputActivation": "relu",
-        "loss": "huber",
+        "outputActivation": "sigmoid",
+        "loss": "l1",
         "optimizer": "adam",
-        "batch_size": 1000,
-        "epochs": 1000,
-        "fitness": 0.8841381658027195,
-        "model": "d:\\VS_Python_Project\\CESI_Bad_Apple\\AI\\models\\24x18\\bestModel.pt"
+        "batch_size": 6000,
+        "epochs": 500,
+        "patience": 150,
+        "fitness": 0.8482654383592517,
+        "model": null
     },
     {
         "layers": [
@@ -30,15 +31,60 @@
             0.000568
         ],
         "l2Reg": 2e-06,
-        "learningRate": 0.000613,
-        "inputActivation": "relu",
+        "learningRate": 0.003,
+        "inputActivation": "tanh",
         "hiddenActivation": "relu",
-        "outputActivation": "relu",
-        "loss": "huber",
+        "outputActivation": "sigmoid",
+        "loss": "l1",
         "optimizer": "adam",
-        "batch_size": 1000,
-        "epochs": 1000,
-        "fitness": 0.8926075708061002,
-        "model": "d:\\VS_Python_Project\\CESI_Bad_Apple\\AI\\models\\24x18\\bestModel.pt"
+        "batch_size": 6000,
+        "epochs": 500,
+        "patience": 150,
+        "fitness": 0.9026949515438359,
+        "model": null
+    },
+    {
+        "layers": [
+            432,
+            5947,
+            10800
+        ],
+        "dropoutRates": [
+            0.000568
+        ],
+        "l2Reg": 2e-06,
+        "learningRate": 0.003,
+        "inputActivation": "tanh",
+        "hiddenActivation": "relu",
+        "outputActivation": "sigmoid",
+        "loss": "l1",
+        "optimizer": "adam",
+        "batch_size": 6000,
+        "epochs": 500,
+        "patience": 150,
+        "fitness": 0.9026949515438359,
+        "model": null
+    },
+    {
+        "layers": [
+            432,
+            5947,
+            10800
+        ],
+        "dropoutRates": [
+            0.000568
+        ],
+        "l2Reg": 2e-06,
+        "learningRate": 0.003,
+        "inputActivation": "tanh",
+        "hiddenActivation": "relu",
+        "outputActivation": "sigmoid",
+        "loss": "l1",
+        "optimizer": "adam",
+        "batch_size": 6000,
+        "epochs": 500,
+        "patience": 150,
+        "fitness": 0.9026949515438359,
+        "model": null
     }
 ]

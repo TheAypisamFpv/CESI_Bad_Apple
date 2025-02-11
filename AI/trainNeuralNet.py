@@ -34,6 +34,7 @@ class NeuralNet(nn.Module):
         self.layers = nn.ModuleList()
         self.dropoutRates = dropoutRates
         self.l2Reg = l2Reg
+        self.patience = 10
 
         # Add input layer
         self.layers.append(nn.Linear(layers[0], layers[1]))
@@ -60,6 +61,14 @@ class NeuralNet(nn.Module):
             return nn.Sigmoid()
         elif activation == 'tanh':
             return nn.Tanh()
+        elif activation == 'softmax':
+            return nn.Softmax(dim=1)
+        elif activation == 'leakyrelu':
+            return nn.LeakyReLU()
+        elif activation == 'prelu':
+            return nn.PReLU()
+        elif activation == 'elu':
+            return nn.ELU()
         else:
             raise ValueError(f"Unsupported activation function: {activation}")
 
@@ -71,53 +80,59 @@ class NeuralNet(nn.Module):
             x = layer(x)
         return x
 
-    def fit(self, trainLoader, testLoader, optimizer, lossFn, epochs, device, index=0):
-        bestAcc = -float("inf")
-        patience = 750
-        patienceCounter = 0
-        patienceThreshold = 0.05 / 100
-        correctThreshold = 0.05
+    def fit(self, trainLoader, testLoader, optimizer, lossFn, epochs:int, patience:int, device, index=0):
+        try:
+            bestAcc = -float("inf")
+            self.patience = patience
+            patienceCounter = 0
+            patienceThreshold = 0.05 / 100
+            correctThreshold = 0.05
 
-        for epoch in range(epochs):
-            self.train()
-            for XBatch, yBatch in trainLoader:
-                XBatch, yBatch = XBatch.to(device, non_blocking=True), yBatch.to(device, non_blocking=True)
-                optimizer.zero_grad()
-                outputs = self(XBatch)
-                loss = lossFn(outputs, yBatch)
-                loss.backward()
-                optimizer.step()
-
-            self.eval()
-            totalAccuracy, totalCount = 0.0, 0
-
-            with torch.no_grad():
-                for XBatch, yBatch in testLoader:
+            for epoch in range(epochs):
+                self.train()
+                for XBatch, yBatch in trainLoader:
                     XBatch, yBatch = XBatch.to(device, non_blocking=True), yBatch.to(device, non_blocking=True)
+                    optimizer.zero_grad()
                     outputs = self(XBatch)
-                    errors = torch.abs(outputs - yBatch)
-                    corrects = (errors < correctThreshold).float()
-                    # print(f"Correct: {corrects.sum().item():.4f}")
-                    totalAccuracy += corrects.sum().item()
-                    totalCount += corrects.numel() 
-                    # print(f"Batch correct: {correct.sum().item():.4f}  Total Accuracy So Far: {totalAccuracy:.4f}  Total Count So Far: {totalCount:.0f}")
-                    
-            accuracy = totalAccuracy / totalCount
-            
+                    loss = lossFn(outputs, yBatch)
+                    loss.backward()
+                    optimizer.step()
 
-            # Update best accuracy with patience
-            if accuracy - bestAcc > patienceThreshold:
-                bestAcc = accuracy
-                patienceCounter = 0
-            else:
-                patienceCounter += 1
+                self.eval()
+                totalAccuracy, totalCount = 0.0, 0
 
-            print(f"[{index}] | Epoch {epoch + 1}/{epochs} (Acc: {accuracy*100:.2f}%) (patience: {patience - patienceCounter})..." + " " * 5, end="\r")
-            
-            if patienceCounter >= patience:
-                break
+                with torch.no_grad():
+                    for XBatch, yBatch in testLoader:
+                        XBatch, yBatch = XBatch.to(device, non_blocking=True), yBatch.to(device, non_blocking=True)
+                        outputs = self(XBatch)
+                        # clamp the output to 0-1
+                        outputs = torch.clamp(outputs, 0, 1)
+                        errors = torch.abs(outputs - yBatch)
+                        corrects = (errors < correctThreshold).float()
+                        # print(f"Correct: {corrects.sum().item():.4f}")
+                        totalAccuracy += corrects.sum().item()
+                        totalCount += corrects.numel() 
+                        # print(f"Batch correct: {correct.sum().item():.4f}  Total Accuracy So Far: {totalAccuracy:.4f}  Total Count So Far: {totalCount:.0f}")
+                        
+                accuracy = totalAccuracy / totalCount
+                
 
-        return bestAcc
+                # Update best accuracy with patience
+                if accuracy - bestAcc > patienceThreshold:
+                    bestAcc = accuracy
+                    patienceCounter = 0
+                else:
+                    patienceCounter += 1
+
+                print(f"[{index}] | Epoch {epoch + 1}/{epochs} (Acc: {accuracy*100:.2f}%) (patience: {patience - patienceCounter})..." + " " * 5, end="\r")
+                
+                if patienceCounter >= patience:
+                    break
+
+            return bestAcc
+        except KeyboardInterrupt:
+            print(f"\nTraining interrupted. Best accuracy: {bestAcc * 100:.2f}%", end="\r")
+            return bestAcc
 
 
 def loadData(filepath):
@@ -198,9 +213,11 @@ def evaluateIndividual(params, XTrain, yTrain, XTest, yTest, populationSize, ind
     testDataset = TensorDataset(torch.tensor(XTest, dtype=torch.float32), torch.tensor(yTest, dtype=torch.float32))
 
     trainLoader = DataLoader(trainDataset, batch_size=params['batch_size'], shuffle=True, pin_memory=True)
-    testLoader = DataLoader(testDataset, batch_size=params['batch_size'], shuffle=True, pin_memory=True) # fuck it shuffle that gyat
+    testLoader = DataLoader(testDataset, batch_size=params['batch_size'], shuffle=False, pin_memory=True)           
 
-    
+    if params['model'] is not None and not isinstance(params['model'], str):
+        model = params['model']
+        model = model.to(device)
 
     bestValAccuracy = model.fit(
         trainLoader,
@@ -208,6 +225,7 @@ def evaluateIndividual(params, XTrain, yTrain, XTest, yTest, populationSize, ind
         optimizer,
         lossFn,
         params['epochs'],
+        params['patience'],
         device,
         index
         )
@@ -299,10 +317,11 @@ def mutate(child: dict, mutationRate: float, mutationForce: float):
     mutateLow, mutateHigh = 1 - mutationForce, 1 + mutationForce
     
     optimizerChoices = ['adam', 'sgd']
-    activationChoices = ['relu', 'sigmoid', 'tanh']
+    activationChoices = ['relu', 'sigmoid', 'tanh', 'softmax', 'leakyrelu', 'prelu', 'elu']
     lossChoices = ['binary_crossentropy', 'mse', 'smoothl1', 'l1', 'huber', 'crossentropy', 'nll', 'poisson']
 
     noMutationKeys = ['fitness', 'model']
+    onlyMutationKeys = ['layers']
 
 
     def getMutatedValue(value):
@@ -321,7 +340,11 @@ def mutate(child: dict, mutationRate: float, mutationForce: float):
     while not goodKey:
         randomKey = np.random.choice(list(child.keys()))
         if randomKey.lower() not in noMutationKeys:
-            goodKey = True
+            if len(onlyMutationKeys) > 0:
+                if randomKey.lower() in onlyMutationKeys:
+                    goodKey = True
+            else:
+                goodKey = True
 
     if randomKey.lower() == 'layers':
         addLayer = np.random.rand() < mutationRate 
@@ -388,7 +411,7 @@ def mutate(child: dict, mutationRate: float, mutationForce: float):
         child[randomKey] = int(np.clip(getMutatedValue(child[randomKey]), 150, None))
 
 
-    # time.sleep(1) # Debug
+    time.sleep(1) # Debug
 
     return child
 
@@ -417,7 +440,7 @@ def saveBestModel(modelPath: str, bestParams: dict):
     torch.save(model, modelPath)
     bestParamsPath = modelPath.removesuffix('.pt') + 'Params.json'
 
-    bestParams['model'] = bestParamsPath
+    bestParams['model'] = modelPath
 
     bestParams = {k: convertNumpyTypes(v) for k, v in bestParams.items()}
 
@@ -428,6 +451,10 @@ def saveBestModel(modelPath: str, bestParams: dict):
     return bestParams
 
 def saveHistory(generationHistory: list, historyPath):
+
+    for individual in generationHistory:
+        if 'model' in individual:
+            individual['model'] = None
 
     # Convert numpy types to Python types
     generationHistory = [convertNumpyTypes(individual) for individual in generationHistory]
@@ -517,11 +544,11 @@ def neuralEvolution(XTrain, yTrain, XTest, yTest, initialParams, generations=50,
         population = population[:populationSize]
 
         tempPopulation = population[0].copy()
-        tempPopulation['model'] = modelPath
+        # tempPopulation['model'] = modelPath
         generationHistory.append(tempPopulation)
         saveHistory(generationHistory, historyPath) # TODO bug fix ?
 
-        if population[0]['fitness'] >= bestIndividual['fitness'] or populationSize == 1:
+        if population[0]['fitness'] >= bestIndividual['fitness']:
             bestIndividual = saveBestModel(modelPath, bestIndividual)
 
 
@@ -559,6 +586,7 @@ def neuralEvolution(XTrain, yTrain, XTest, yTest, initialParams, generations=50,
               getProgressBar(completion, wheelIndex=progressWheelIndex) + 
               f"Best Accuracy: {newPopulation[0]['fitness'] * 100:.2f}% / {bestIndividual['fitness'] * 100:.2f}%  |  Time remaining: {estTimeStr}  -  est. Finish Time: {estFinishTimeStr} ", end='\r')
 
+    bestIndividual['model'] = modelPath
     return bestIndividual, generationHistory
 
 def plotResults(history):
@@ -583,6 +611,7 @@ def plotResults(history):
 
 def main():
     # Check if GPU is available
+    print("-" * 50)
     print("System Information:")
     print("PyTorch version:", torch.__version__)
     print(" - Available GPUs:", torch.cuda.device_count())
@@ -665,48 +694,62 @@ def main():
             outputNeurons
         ],
         'dropoutRates': [
-            0.01
+            0.0001
         ],
         'l2Reg': 0.001,
-        'learningRate': 0.01,
+        'learningRate': 0.0006,
         'inputActivation': 'relu',
         'hiddenActivation': 'relu',
         'outputActivation': 'relu',
-        'loss': 'l1',
+        'loss': 'huber',
         'optimizer': 'adam',
         'batch_size': 6000,
         'epochs': 150,
+        'patience': 10,
         'fitness': 0.0
     }
     
     
     useBestModel = True
+    useTrainedModel = True
 
     # check if there is a saved best model
     if os.path.isfile(bestParamsPath) and useBestModel:
+        print("Loading best model parameters...", end=' ')
         with open(bestParamsPath, 'r') as f:
             bestModelParam = json.load(f )
             # check if input neurons and output neurons match the data
             if bestModelParam['layers'][0] == inputNeurons and bestModelParam['layers'][-1] == outputNeurons:
                 initialParams = bestModelParam
-                print("\nLoaded best model parameters.")
+                print("Done")
+                if useTrainedModel:
+                    print("Loading trained model...", end=' ')
+                    model = torch.load(modelPath, weights_only=False)
+                    model = model.to(device)
+                    model.eval()
+                    initialParams['model'] = model
+                    print("Done")
             else:
-                print("\nInvalid best model parameters. Using initial parameters.")
-    else:
-        print("\nBase layer configuration:")
-        print(f"- Input neurons: {inputNeurons}")
-        print(f"- Hidden layers: [{hidden1}, {hidden2}]")
-        print(f"- Output neurons: {outputNeurons}")
+                print("Invalid model parameters. Using default parameters.")
+
+    
+
+    print("\nLayers configuration:")
+    print(f"- Neurons layers: {initialParams['layers']}")
+    print(f"- Batch size: {initialParams['batch_size']}")
+    print(f"- Epochs: {initialParams['epochs']}")
 
 
     generations = 5
-    populationSize = 1
-    mutationRate = 0.8 # percentage of the population that will have one of their parameters mutated (does not include the parents of the population)
-    mutationForce = 0.2 # will mutate numerical values by a factor of 1 +/- mutationForce
+    populationSize = 5
+    mutationRate = 0 # percentage of the population that will have one of their parameters mutated (does not include the parents of the population)
+    mutationForce = 0 # will mutate numerical values by a factor of 1 +/- mutationForce
     cpuPowerLimit = 0.85
     nJobs = 1
 
-
+    mutationRate = 0 if useTrainedModel else mutationRate
+    mutationForce = 0 if useTrainedModel else mutationForce
+    populationSize = 1 if useTrainedModel else populationSize
     
     bestParams, generationHistory = neuralEvolution(XTrain=XTrain,
                                                     yTrain=yTrain,
