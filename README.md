@@ -1,36 +1,56 @@
-# Can CESI Bad Apple!! ?
+# Bad Apple with Neural Networks
 
----
+This project uses neural networks to upscale and recreate the famous "Bad Apple!!" animation. The neural network is trained to transform low-resolution frames into higher resolution versions, allowing for playback of the video using AI-generated frames.
 
-### 1 simple rule:
-- use at least 1 thing learned during a course to play Bad Apple!! (Video and/or Sound)
+## Project Overview
 
+This repository contains a complete pipeline for:
+1. Converting video frames to feature vectors
+2. Training a neural network model
+3. Using the model to play the upscaled video
 
----
-# Courses
-## Networking with Cisco Packet Tracer
-### [Using the Programming function inside Computers](https://www.youtube.com/watch?v=OW7dnr0aOqs)
-- Python script to print each frames. Because this python can't open files, and you can't create `.txt` files, the whole ASCII video had to be in the python file.
-- **Updated version** : now runs in real time !
+## Components
 
-## Web Project (HTML , CSS & JavaScript)
-### Using JavaScript to change text
-- JavaScript script that change paragraphe text each frame to play Bad Apple, and plays sound.
-> **PHP file** : https://github.com/Yug0-o/Projet-WEB/blob/dev/Bad_Apple.php
+### Data Preparation
+- `videoTofeatures.py`: Converts the original Bad Apple video into low-resolution and high-resolution frame pairs, saving them as CSV data for model training.
 
-> **JavaScript file** : https://github.com/Yug0-o/Projet-WEB/blob/dev/assets/JS/Bad_Apple.js
+### Model Training
+- `customModel.py`: Contains the neural network architecture (CNN with residual blocks and upsampling layers)
+- `trainCustomModel.py`: Trains the model with the prepared data, saving the trained model for later use
 
-> **Audio file** : https://github.com/Yug0-o/Projet-WEB/blob/dev/assets/BA/Bad%20apple.mp3
+### Playback and Testing
+- `AiVideoPlayer.py`: Loads the trained model and plays back the Bad Apple animation by upscaling low-resolution frames
+- `progressBar.py`: Helper utility for displaying progress during training and processing
 
-## Graph Theory
-### [Using Temporal Graph Visualization](https://www.youtube.com/watch?v=XJBJw7phDGY)
-*This course has barely started, and yet I've already completed it because I was bored*
-- Implementation of a temporal graph to visualize each frame, represented as a node, with edges representing transitions between consecutive frames.
-> **Python file** : https://github.com/TheAypisamFpv/CESI_Bad_Apple/blob/GraphTheory/node%20%26%20graph%20theory/VideoToTemporalGraph.py
+## How It Works
 
-## AI *(Video once all bugs are fixed)*
-- Scripts for converting video frames to CSV (`videoTofeatures.py`), training neural networks (`trainNeuralNet.py`), and playing predicted outputs (`AiVideoPlayer.py`).
-- Each file demonstrates a different step in the AI pipeline: data preparation, model training, and frame prediction.
+1. **Frame Processing**: The original video is processed into pairs of low-resolution (24x18) and high-resolution (120x90) frames
+2. **Model Architecture**: A convolutional neural network with residual blocks and upsampling layers learns to map low-res to high-res
+3. **Training**: The model is trained on thousands of frame pairs to minimize the difference between predicted and actual high-res frames
+4. **Playback**: The trained model takes low-resolution frames as input and generates high-resolution outputs in real-time
 
-### BUG TO FIX : 
-- #### Memory leak when running Neural Evolution (possibly fixed by killing parrallel processes)
+## Usage
+
+1. **Prepare the dataset**:
+   ```
+   python videoTofeatures.py
+   ```
+
+2. **Train the Model**:
+   ```
+   python trainCustomModel.py
+   ```
+
+3. **Use the Model**:
+   ```
+   python AiVideoPlayer.py
+   ```
+   
+## Model Details
+
+The model uses a convolutional neural network architecture with:
+- Residual blocks to preserve features through deep layers
+- Pixel shuffle upsampling to increase resolution
+- Bilinear interpolation for precise resizing
+
+The training process uses MSE loss and Adam optimizer to learn the mapping between low and high resolution frames.

@@ -3,7 +3,7 @@ import cv2
 import pandas as pd
 import hashlib
 
-def videoToCsv(videoPath:str, outputCsv:str, initialScalingFactor:float=1.0, ouputScalingFactor:float=0.5, frameSkip=1):
+def videoToCsv(videoPath:str, initialScalingFactor:float=1.0, outputScalingFactor:float=0.5, frameSkip=1):
     """
     Convert a video to a CSV file where each row is a flattened frame.
 
@@ -17,9 +17,8 @@ def videoToCsv(videoPath:str, outputCsv:str, initialScalingFactor:float=1.0, oup
     ---
     Args:
         - videoPath (str): Path to the video file.
-        - outputCsv (str): Path to the output CSV file.
         - initialScalingFactor (float): Scaling factor to apply to the video frames before converting them to CSV.
-        - ouputScalingFactor (float): Scaling factor to apply to the video frames after converting them to CSV.
+        - outputScalingFactor (float): Scaling factor to apply to the video frames after converting them to CSV.
         - frameSkip (int): Number of frames to skip when converting the video to CSV.
     """
     print("Converting video to CSV...")
@@ -49,8 +48,8 @@ def videoToCsv(videoPath:str, outputCsv:str, initialScalingFactor:float=1.0, oup
     initialNewFrameWidth = int(initialFrameWidth * initialScalingFactor)
     initialNewFrameHeight = int(initialFrameHeight * initialScalingFactor)
 
-    outputNewFrameWidth = int(initialFrameWidth * ouputScalingFactor)
-    outputNewFrameHeight = int(initialFrameHeight * ouputScalingFactor)
+    outputNewFrameWidth = int(initialFrameWidth * outputScalingFactor)
+    outputNewFrameHeight = int(initialFrameHeight * outputScalingFactor)
     
     print(f"\t  - FPS: {newFps}")
     print(f"\t  - Frame count: {newFrameCount}")
@@ -92,7 +91,7 @@ def videoToCsv(videoPath:str, outputCsv:str, initialScalingFactor:float=1.0, oup
         # cv2.imshow("Output", outputFrame)
         # cv2.waitKey(20)
 
-        # Normalize the frames
+        # Normalize the frames 
         inputFrame = inputFrame / 255.0
         outputFrame = outputFrame / 255.0
     
@@ -109,24 +108,31 @@ def videoToCsv(videoPath:str, outputCsv:str, initialScalingFactor:float=1.0, oup
 
     print(f"\tProcessing frame done.         ")
 
-    outputCsvName = outputCsv.removesuffix('.csv')
+    cap.release()
+    cv2.destroyAllWindows()
 
-    # create a hash of the csv file using the frames data
-    print("\n\tHashing the CSV file...", end=" ")
-    csvHash = hashlib.md5(str(framesData).encode()).hexdigest()
-    print("done.")
+    # get the video name for the output csv
+    outputCsvName = os.path.basename(videoPath).removesuffix('.mp4')
+    
+    # create the dataset directory if it doesn't exist
+    datasetDir = os.path.join(os.path.dirname(videoPath), 'dataset')
+    os.makedirs(datasetDir, exist_ok=True)
+    
+    outputCsvDir = os.path.join(datasetDir, f"{initialNewFrameWidth}x{initialNewFrameHeight}_To_{outputNewFrameWidth}x{outputNewFrameHeight}")
+    os.makedirs(outputCsvDir, exist_ok=True)
 
+    outputCsv = os.path.join(outputCsvDir, f"{outputCsvName}.csv")
 
     # save input and output frame size to csv
     print("\n\tSaving frame size to CSV...", end=" ")
-    frameDimensions = pd.DataFrame([[initialNewFrameWidth, initialNewFrameHeight, outputNewFrameWidth, outputNewFrameHeight, csvHash]], columns=['initialNewFrameWidth', 'initialNewFrameHeight', 'outputNewFrameWidth', 'outputNewFrameHeight', 'hash'])
+    frameDimensions = pd.DataFrame([[initialNewFrameWidth, initialNewFrameHeight, outputNewFrameWidth, outputNewFrameHeight]], columns=['initialNewFrameWidth', 'initialNewFrameHeight', 'outputNewFrameWidth', 'outputNewFrameHeight'])
     frameDimensions.to_csv(outputCsv.removesuffix('.csv') + '_size.csv', index=False)
     print("done.")
 
 
     print(f"\tSaving CSV `{outputCsv}`...", end=" ")
 
-    outputCsv = f"{outputCsvName}_{initialNewFrameWidth}x{initialNewFrameHeight}.csv"
+    outputCsv = os.path.join(outputCsvDir, f"{outputCsvName}_{initialNewFrameWidth}x{initialNewFrameHeight}.csv")
     
     videoFrameDataset = pd.DataFrame(framesData, columns=['resizedFrameData', 'originalFrameData'])    
     videoFrameDataset.to_csv(outputCsv, index=False)
@@ -137,9 +143,8 @@ def videoToCsv(videoPath:str, outputCsv:str, initialScalingFactor:float=1.0, oup
 
 if __name__ == '__main__':
     rootDir = os.path.dirname(os.path.abspath(__file__))
-    videoPath = 'D:/VS_Python_Project/CESI_Bad_Apple/Bad Apple!!.mp4'
-    initialScalingFactor = 0.05
-    ouputScalingFactor = 0.25
+    videoPath = 'Bad Apple!!.mp4'
+    initialScalingFactor = 0.1
+    outputScalingFactor = 1
     frameSkip = 1
-    outputCsv = os.path.join(rootDir, 'Bad Apple!!.csv')
-    videoToCsv(videoPath=videoPath, outputCsv=outputCsv, initialScalingFactor=initialScalingFactor, ouputScalingFactor=ouputScalingFactor, frameSkip=frameSkip)
+    videoToCsv(videoPath=videoPath, initialScalingFactor=initialScalingFactor, outputScalingFactor=outputScalingFactor, frameSkip=frameSkip)
