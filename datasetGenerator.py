@@ -146,5 +146,5 @@ if __name__ == '__main__':
     videoPath = 'Bad Apple!!.mp4'
     initialScalingFactor = 0.1
     outputScalingFactor = 1
-    frameSkip = 1
+    frameSkip = 1 # 1: default
     videoToCsv(videoPath=videoPath, initialScalingFactor=initialScalingFactor, outputScalingFactor=outputScalingFactor, frameSkip=frameSkip)
