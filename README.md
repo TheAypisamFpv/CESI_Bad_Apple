@@ -9,7 +9,7 @@
 ---
 # Courses
 ## Networking with Cisco Packet Tracer
-### [Using the Programming function inside Computers](https://www.youtube.com/watch?v=OW7dnr0aOqs)
+### [Using the Programming function inside Computers](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/cisco-packet-tracer)
 - Python script to print each frames. Because this python can't open files, and you can't create `.txt` files, the whole ASCII video had to be in the python file.
 - **Updated version** : now runs in real time !
 
@@ -28,7 +28,7 @@
 - Implementation of a temporal graph to visualize each frame, represented as a node, with edges representing transitions between consecutive frames.
 > **Python file** : https://github.com/TheAypisamFpv/CESI_Bad_Apple/blob/GraphTheory/node%20%26%20graph%20theory/VideoToTemporalGraph.py
 
-## AI *(Video once all bugs are fixed)*
+## [AI](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/AI)
 - Scripts for converting video frames to CSV (`videoTofeatures.py`), training neural networks (`trainNeuralNet.py`), and playing predicted outputs (`AiVideoPlayer.py`).
 - Each file demonstrates a different step in the AI pipeline: data preparation, model training, and frame prediction.
 
