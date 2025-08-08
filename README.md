@@ -14,7 +14,7 @@ This repository contains a complete pipeline for:
 ## Components
 
 ### Data Preparation
-- `videoTofeatures.py`: Converts the original Bad Apple video into low-resolution and high-resolution frame pairs, saving them as CSV data for model training.
+- `datasetGenerator.py`: Converts the original Bad Apple video into low-resolution and high-resolution frame pairs, saving them as CSV data for model training.
 
 ### Model Training
 - `customModel.py`: Contains the neural network architecture (CNN with residual blocks and upsampling layers)
@@ -35,7 +35,7 @@ This repository contains a complete pipeline for:
 
 1. **Prepare the dataset**:
    ```
-   python videoTofeatures.py
+   python datasetGenerator.py
    ```
 
 2. **Train the Model**:
