@@ -1,6 +1,8 @@
 # Bad Apple in Cisco Packet Tracer
+Youtube video available here:
 
 [![Bad Apple in Cisco Packet Tracer](https://img.youtube.com/vi/OW7dnr0aOqs/0.jpg)](https://youtu.be/OW7dnr0aOqs?si=Xn7q4KdyrlpGUiIf)
+
 
 Play Bad Apple in Cisco Packet Tracer using Python, inside a computer in CPT.
 
