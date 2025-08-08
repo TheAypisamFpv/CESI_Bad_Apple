@@ -200,25 +200,22 @@ def trainModel(model, trainLoader, testLoader, criterion, optimizer, epochs, pat
         if counter >= patience:
             print(f"\n\nEarly stopping at epoch {epoch+1}")
             break
-    
-    # Load the best model
-    if bestModel is not None:
-        model.load_state_dict(bestModel)
-        
-    # Save the best model if a path is provided
-    if savePath is not None:
-        torch.save(model, savePath)
-        print(f"\nModel saved to {savePath}")
         
     print("\nTraining complete")
-    return history, model
+    return history, bestModel
 
 def saveModelParams(model, inputSize, outputSize, useConvLayers, savePath):
     """Save model parameters to a JSON file."""
+    # Convert numpy types to native Python types
+    if isinstance(inputSize, tuple):
+        inputSize = tuple(int(x) if hasattr(x, 'item') else x for x in inputSize)
+    if isinstance(outputSize, tuple):
+        outputSize = tuple(int(x) if hasattr(x, 'item') else x for x in outputSize)
+    
     params = {
         'inputSize': inputSize,
         'outputSize': outputSize,
-        'useConvLayers': useConvLayers,
+        'useConvLayers': bool(useConvLayers),
         'architecture': str(model)
     }
     
@@ -259,14 +256,14 @@ def plotTrainingHistory(history, savePath=None):
 
 def main():
     # Parameters
-    batchSize = 64
-    epochs = 10
+    batchSize = 96
+    epochs = 100
     learningRate = 0.002
     trainValSplit = 0.8 # 80% training, 20% validation
     patience = 15
-    useConvLayers = True  # Set to True to use convolutional approach
+    useConvLayers = True
 
-    CsvDatasetRelativePath = "dataset/24x18_To_480x360/Bad Apple!!_24x18.csv"
+    CsvDatasetRelativePath = "dataset\\48x36_To_480x360\\Bad Apple!!_48x36.csv"
 
     # File paths
     rootDir = os.path.dirname(os.path.abspath(__file__))
@@ -304,7 +301,7 @@ def main():
     print(f"Output size: {outputNewFrameWidth}x{outputNewFrameHeight}")
 
     # Create model directory
-    modelDir = os.path.join(rootDir, "models", f"BadAppleModel_{initialNewFrameWidth}x{initialNewFrameHeight}_To_{outputNewFrameWidth}x{outputNewFrameHeight}")
+    modelDir = os.path.join(rootDir, "models", f"BadAppleModel_{initialNewFrameWidth}x{initialNewFrameHeight}_To_{outputNewFrameWidth}x{outputNewFrameHeight}_{'conv' if useConvLayers else 'dense'}")
     os.makedirs(modelDir, exist_ok=True)
     
     modelHistoryPath = os.path.join(modelDir, "trainingHistory")
