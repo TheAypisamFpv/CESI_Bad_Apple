@@ -98,7 +98,7 @@ torchvision==0.22.1+cu128
   <img src="https://img.shields.io/badge/1-Frame%20Processing-blue?style=for-the-badge" alt="Step 1"/>
 </div>
 
-> The original video is processed into pairs of low-resolution (24x18) and high-resolution (120x90) frames
+> The original video is processed into pairs of low-resolution (48x36) and high-resolution (360x270) frames
 
 <div align="left">
   <img src="https://img.shields.io/badge/2-Model%20Architecture-purple?style=for-the-badge" alt="Step 2"/>
