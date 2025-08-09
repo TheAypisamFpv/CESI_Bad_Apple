@@ -14,23 +14,14 @@
 - **Updated version** : now runs in real time !
 
 ## Web Project (HTML , CSS & JavaScript)
-### Using JavaScript to change text
+### [Using JavaScript to change text](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/Web?tab=readme-ov-file)
 - JavaScript script that change paragraphe text each frame to play Bad Apple, and plays sound.
-> **PHP file** : https://github.com/Yug0-o/Projet-WEB/blob/dev/Bad_Apple.php
-
-> **JavaScript file** : https://github.com/Yug0-o/Projet-WEB/blob/dev/assets/JS/Bad_Apple.js
-
-> **Audio file** : https://github.com/Yug0-o/Projet-WEB/blob/dev/assets/BA/Bad%20apple.mp3
 
 ## Graph Theory
 ### [Using Temporal Graph Visualization](https://www.youtube.com/watch?v=XJBJw7phDGY)
-*This course has barely started, and yet I've already completed it because I was bored*
 - Implementation of a temporal graph to visualize each frame, represented as a node, with edges representing transitions between consecutive frames.
 > **Python file** : https://github.com/TheAypisamFpv/CESI_Bad_Apple/blob/GraphTheory/node%20%26%20graph%20theory/VideoToTemporalGraph.py
 
-## [AI](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/AI)
-- Scripts for converting video frames to CSV (`videoTofeatures.py`), training neural networks (`trainNeuralNet.py`), and playing predicted outputs (`AiVideoPlayer.py`).
-- Each file demonstrates a different step in the AI pipeline: data preparation, model training, and frame prediction.
-
-### BUG TO FIX : 
-- #### Memory leak when running Neural Evolution (possibly fixed by killing parrallel processes)
+## AI
+### [using Convolutional Neural Networks (CNNs)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/AI)
+Neural networks to upscale the Bad Apple video from 48x36 to 480x360
