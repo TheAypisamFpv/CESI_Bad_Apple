@@ -1,28 +1,72 @@
-# Can CESI Bad Apple!! ?
+# 🍎 Can CESI Bad Apple!! ? 🍎
+
+<div align="center">
+  
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
+![Languages](https://img.shields.io/badge/Languages-Python%20|%20JS%20|%20HTML%20|%20CSS-blue?style=for-the-badge)
+![Education](https://img.shields.io/badge/Education-CESI-orange?style=for-the-badge)
+
+</div>
+
+## 📝 Project Description
+This repository contains various implementations of the "Bad Apple!!" animation using different technologies and concepts learned during CESI courses.
+
+### 🔍 The Challenge
+**1 simple rule:**
+- Use at least one concept learned during a course to play Bad Apple!! (Video and/or Sound)
 
 ---
 
-### 1 simple rule:
-- use at least a thing learned during a course to play Bad Apple!! (Video and/or Sound)
+## 🎓 Course Implementations
 
+<div align="center">
+  
+  ### 🌐 Networking with Cisco Packet Tracer
+  
+</div>
+
+[![Networking Branch](https://img.shields.io/badge/Branch-cisco--packet--tracer-white?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/cisco-packet-tracer)
+
+Python script to print each frame in a Cisco Packet Tracer environment. Due to the limitations of the environment (no file operations, no text file creation), the entire ASCII video had to be embedded directly within the Python file.
 
 ---
-# Courses
-## [Networking with Cisco Packet Tracer](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/cisco-packet-tracer)
 
-Python script to print each frames. Because this python can't open files, and you can't create `.txt` files, the whole ASCII video had to be in the python file.
+<div align="center">
+  
+  ### 🖥️ Web Project (HTML, CSS & JavaScript)
+  
+</div>
 
-<br>
+[![Web Branch](https://img.shields.io/badge/Branch-Web-white?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/Web)
 
-## [Web Project (HTML , CSS & JavaScript)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/Web)
-JavaScript script that change paragraphe text each frame to play Bad Apple, and plays sound.
+A JavaScript implementation that changes paragraph text for each frame to play Bad Apple, along with sound playback.
 
-<br>
+**Original CESI project:** [Projet-WEB](https://github.com/Yug0-o/Projet-WEB)
 
-## [Graph Theory](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/Graph-Theory)
-Implementation of a temporal graph to visualize each frame, represented as a node, with edges representing transitions between consecutive frames.
+---
 
-<br>
+<div align="center">
+  
+  ### 📊 Graph Theory
+  
+</div>
 
-## [AI](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/AI)
-Neural networks to upscale the Bad Apple video from 48x36 to 480x360
+[![Graph Theory Branch](https://img.shields.io/badge/Branch-Graph--Theory-white?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/Graph-Theory)
+
+Implementation of a temporal graph to visualize each frame as a node, with edges representing transitions between consecutive frames.
+
+**Original CESI project:** [Project-DPD](https://github.com/TheAypisamFpv/Project-DPD)
+
+---
+
+<div align="center">
+  
+  ### 🧠 Artificial Intelligence
+  
+</div>
+
+[![AI Branch](https://img.shields.io/badge/Branch-AI-white?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/AI)
+
+Neural networks designed to upscale the Bad Apple video from a low resolution of 48x36 pixels to a higher resolution of 480x360 pixels.
+
+**Original CESI project:** [AI-Project](https://github.com/TheAypisamFpv/AI-Project)
