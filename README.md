@@ -152,7 +152,7 @@ Make sure all four files are in the same directory:
     <td>For consistent ASCII art display</td>
   </tr>
   <tr>
-    <td><img src="https://img.shields.io/badge/Browser-Based-green?style=flat-square" alt="Browser Based"/></td>
+    <td><img src="https://img.shields.io/badge/Browser-Based-darkgreen?style=flat-square" alt="Browser Based"/></td>
     <td>No additional software or setup required</td>
   </tr>
 </table>
