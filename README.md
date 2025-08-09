@@ -1,36 +1,48 @@
-# Can CESI Bad Apple!! ?
+# Bad Apple Web Player
 
----
+Play Bad Apple in your web browser using HTML, JavaScript, and ASCII art.
 
-### 1 simple rule:
-- use at least 1 thing learned during a course to play Bad Apple!! (Video and/or Sound)
+**Fun fact**: This Bad Apple implementation was used as an Easter egg in the [Projet-WEB](https://github.com/Yug0-o/Projet-WEB) project!
 
+## Project Overview
 
----
-# Courses
-## Networking with Cisco Packet Tracer
-### [Using the Programming function inside Computers](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/cisco-packet-tracer)
-- Python script to print each frames. Because this python can't open files, and you can't create `.txt` files, the whole ASCII video had to be in the python file.
-- **Updated version** : now runs in real time !
+This repository contains a simple web-based ASCII art player that:
+1. Displays Bad Apple animation using ASCII characters
+2. Plays synchronized audio
+3. Runs directly in any modern web browser
 
-## Web Project (HTML , CSS & JavaScript)
-### Using JavaScript to change text
-- JavaScript script that change paragraphe text each frame to play Bad Apple, and plays sound.
-> **PHP file** : https://github.com/Yug0-o/Projet-WEB/blob/dev/Bad_Apple.php
+## Components
 
-> **JavaScript file** : https://github.com/Yug0-o/Projet-WEB/blob/dev/assets/JS/Bad_Apple.js
+### Web Implementation
+- `Bad_Apple.html`: The main HTML file that provides the player interface
+- `Bad_Apple.js`: JavaScript code that handles the animation and playback
+- `Bad apple.txt`: ASCII art frames for the animation
+- `Bad apple.mp3`: Audio file for synchronized playback
 
-> **Audio file** : https://github.com/Yug0-o/Projet-WEB/blob/dev/assets/BA/Bad%20apple.mp3
+## How It Works
 
-## Graph Theory
-### [Using Temporal Graph Visualization](https://www.youtube.com/watch?v=XJBJw7phDGY)
-*This course has barely started, and yet I've already completed it because I was bored*
-- Implementation of a temporal graph to visualize each frame, represented as a node, with edges representing transitions between consecutive frames.
-> **Python file** : https://github.com/TheAypisamFpv/CESI_Bad_Apple/blob/GraphTheory/node%20%26%20graph%20theory/VideoToTemporalGraph.py
+1. **ASCII Animation**: The animation is stored as ASCII text frames
+2. **Audio Sync**: JavaScript code synchronizes the ASCII animation with the audio playback
+3. **Web Display**: HTML and JavaScript render the ASCII art in a monospace font for proper display
 
-## [AI](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/AI)
-- Scripts for converting video frames to CSV (`videoTofeatures.py`), training neural networks (`trainNeuralNet.py`), and playing predicted outputs (`AiVideoPlayer.py`).
-- Each file demonstrates a different step in the AI pipeline: data preparation, model training, and frame prediction.
+## Usage
 
-### BUG TO FIX : 
-- #### Memory leak when running Neural Evolution (possibly fixed by killing parrallel processes)
+1. Make sure all four files are in the same directory:
+   - `Bad_Apple.html`
+   - `Bad_Apple.js`
+   - `Bad apple.txt`
+   - `Bad apple.mp3`
+
+2. Simply open `Bad_Apple.html` in your web browser
+
+3. Click the play button to start the animation with synchronized audio
+
+## Technical Details
+
+The web implementation uses:
+- HTML5 audio for music playback
+- JavaScript for animation timing and frame display
+- Monospace font rendering for consistent ASCII art display
+- Browser-based playback requiring no additional software or setup
+
+Note: For best results, use a modern web browser with JavaScript enabled.
