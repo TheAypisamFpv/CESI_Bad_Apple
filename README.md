@@ -2,7 +2,7 @@
 ![Inference Example](images/inference.png)
 *Side-by-side comparison showing input (left), AI-generated frame (middle), and original frame (right)*
 
-This project uses neural networks to upscale and recreate the famous "Bad Apple!!" animation. The neural network is trained to transform low-resolution frames into higher resolution versions, allowing for playback of the video using AI-generated frames.
+This project uses Neural Networks to upscale and recreate Bad Apple!!. The neural network is trained to transform low-resolution frames into higher resolution versions, allowing for playback of the video using AI-generated frames.
 
 ## Project Overview
 
