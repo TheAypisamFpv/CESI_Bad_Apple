@@ -1,27 +1,67 @@
-# Can CESI Bad Apple!! ?
+# Bad Apple - Temporal Graph Visualization
 
----
+Convert and visualize the Bad Apple video as a temporal graph using Python. This implementation provides a unique perspective by treating the video as a dynamic network where frames are nodes connected through temporal edges.
 
-### 1 simple rule:
-- use at least 1 thing learned during a course to play Bad Apple!! (Video and/or Sound)
+## Project Overview
 
+This repository implements a graph theory approach to video visualization by:
+1. Converting video frames into graph nodes
+2. Creating temporal relationships between frames as edges
+3. Visualizing the video as a dynamic graph structure
+4. Providing multiple visualization and playback options
 
----
-# Courses
-## Networking with Cisco Packet Tracer
-### [Using the Programming function inside Computers](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/cisco-packet-tracer)
-- Python script to print each frames. Because this python can't open files, and you can't create `.txt` files, the whole ASCII video had to be in the python file.
-- **Updated version** : now runs in real time !
+Visualize Bad Apple as a temporal graph using Python, NetworkX, and Matplotlib. This implementation treats the video as a dynamic graph where each frame is a node connected through temporal edges.
 
-## Web Project (HTML , CSS & JavaScript)
-### [Using JavaScript to change text](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/Web?tab=readme-ov-file)
-- JavaScript script that change paragraphe text each frame to play Bad Apple, and plays sound.
+### Requirements
+```
+matplotlib==3.10.5
+networkx==3.5
+numpy==2.2.6
+opencv-python==4.12.0.88
+```
 
-## Graph Theory
-### [Using Temporal Graph Visualization](https://www.youtube.com/watch?v=XJBJw7phDGY)
-- Implementation of a temporal graph to visualize each frame, represented as a node, with edges representing transitions between consecutive frames.
-> **Python file** : https://github.com/TheAypisamFpv/CESI_Bad_Apple/blob/GraphTheory/node%20%26%20graph%20theory/VideoToTemporalGraph.py
+### Components
 
-## AI
-### [using Convolutional Neural Networks (CNNs)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/AI)
-Neural networks to upscale the Bad Apple video from 48x36 to 480x360
+- `VideoToTemporalGraph.py`: Main script that handles video processing and graph visualization
+
+### Features
+
+1. **Frame Extraction**: Converts video into sequential frames with timestamps
+2. **Temporal Graph Creation**: Builds a graph where:
+   - Nodes represent individual frames
+   - Edges represent temporal transitions between frames
+3. **Visualization Options**:
+   - Dynamic graph visualization with sliding window
+   - Frame-by-frame playback
+   - Performance monitoring (frame drop statistics)
+
+### Usage
+
+1. Set up the Python environment:
+   ```
+   pip install -r requirements.txt
+   ```
+
+2. Run the script:
+   ```
+   python VideoToTemporalGraph.py
+   ```
+
+3. Follow the prompts to:
+   - Input video file path
+   - Wait for the `.pkl` file to be created
+   - Input the `.pkl` file path to load and visualize the temporal graph
+
+### Technical Details
+
+The implementation uses:
+- NetworkX for graph structure and manipulation
+- OpenCV for video frame extraction
+- Matplotlib for visualization and animation
+- Pickle for saving/loading graph data
+
+The temporal graph structure provides a unique way to analyze the video as a dynamic network, with features like:
+- Frame transition analysis
+- Temporal relationship visualization
+- Performance optimization through frame skipping
+- Memory-efficient sliding window display
