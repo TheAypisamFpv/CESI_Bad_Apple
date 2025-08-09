@@ -25,7 +25,7 @@ This repository contains various implementations of the "Bad Apple!!" animation 
   
 </div>
 
-[![Networking Branch](https://img.shields.io/badge/Branch-cisco--packet--tracer-white?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/cisco-packet-tracer)
+[![Networking Branch](https://img.shields.io/badge/Branch-cisco--packet--tracer-darkcyan?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/cisco-packet-tracer)
 
 Python script to print each frame in a Cisco Packet Tracer environment. Due to the limitations of the environment (no file operations, no text file creation), the entire ASCII video had to be embedded directly within the Python file.
 
@@ -37,7 +37,7 @@ Python script to print each frame in a Cisco Packet Tracer environment. Due to t
   
 </div>
 
-[![Web Branch](https://img.shields.io/badge/Branch-Web-white?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/Web)
+[![Web Branch](https://img.shields.io/badge/Branch-Web-blue?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/Web)
 
 A JavaScript implementation that changes paragraph text for each frame to play Bad Apple, along with sound playback.
 
@@ -51,7 +51,7 @@ A JavaScript implementation that changes paragraph text for each frame to play B
   
 </div>
 
-[![Graph Theory Branch](https://img.shields.io/badge/Branch-Graph--Theory-white?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/Graph-Theory)
+[![Graph Theory Branch](https://img.shields.io/badge/Branch-Graph--Theory-darkgreen?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/Graph-Theory)
 
 Implementation of a temporal graph to visualize each frame as a node, with edges representing transitions between consecutive frames.
 
@@ -65,7 +65,7 @@ Implementation of a temporal graph to visualize each frame as a node, with edges
   
 </div>
 
-[![AI Branch](https://img.shields.io/badge/Branch-AI-white?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/AI)
+[![AI Branch](https://img.shields.io/badge/Branch-AI-violet?style=for-the-badge)](https://github.com/TheAypisamFpv/CESI_Bad_Apple/tree/AI)
 
 Neural networks designed to upscale the Bad Apple video from a low resolution of 48x36 pixels to a higher resolution of 480x360 pixels.
 
