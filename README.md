@@ -117,7 +117,7 @@ torchvision==0.22.1+cu128
 > The model is trained on thousands of frame pairs to minimize the difference between predicted and actual high-res frames
 
 <div align="left">
-  <img src="https://img.shields.io/badge/4-Playback-green?style=for-the-badge" alt="Step 4"/>
+  <img src="https://img.shields.io/badge/4-Playback-darkgreen?style=for-the-badge" alt="Step 4"/>
 </div>
 
 > The trained model takes low-resolution frames as input and generates high-resolution outputs in real-time
