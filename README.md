@@ -184,7 +184,7 @@ python VideoToTemporalGraph.py
     <td>Video frame extraction</td>
   </tr>
   <tr>
-    <td><img src="https://img.shields.io/badge/Matplotlib-green?style=flat-square" alt="Matplotlib"/></td>
+    <td><img src="https://img.shields.io/badge/Matplotlib-darkgreen?style=flat-square" alt="Matplotlib"/></td>
     <td>Visualization and animation</td>
   </tr>
   <tr>
