@@ -16,7 +16,7 @@
 
 This project uses **Neural Networks** to upscale and recreate "Bad Apple!!". The neural network is trained to transform low-resolution frames into higher resolution versions, allowing for playback of the video using AI-generated frames.
 
-<div align="center">
+<div align="left">
   
 ### 📋 Pipeline Components
 
