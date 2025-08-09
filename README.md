@@ -1,5 +1,3 @@
-# 🍎 Bad Apple - Temporal Graph Visualization 📊
-
 <div align="center">
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
@@ -9,10 +7,20 @@
 
 </div>
 
-Convert and visualize the Bad Apple video as a temporal graph using Python. This implementation provides a unique perspective by treating the video as a dynamic network where frames are nodes connected through temporal edges.
+# 🍎 Bad Apple - Temporal Graph Visualization 📊
+
+<div align="center">
+
+<a href="https://youtu.be/XJBJw7phDGY?si=dxtRH8JJp5Airdj6">
+  <img src="https://img.youtube.com/vi/XJBJw7phDGY/0.jpg" alt="Bad Apple!! but with Temporal Graph" width="600">
+</a>
+
+*▶️ Click the image to watch **Bad Apple!! but with Temporal Graph***
+
+</div>
+
 
 ## 🌟 Project Overview
-
 This repository implements a graph theory approach to video visualization by:
 
 <table>
