@@ -1,14 +1,18 @@
-# 🍎 Bad Apple with Neural Networks 🧠
-
 <div align="center">
-
-![Inference Example](images/inference.png)
   
-*Side-by-side comparison showing input (left), AI-generated frame (middle), and original frame (right)*
-
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.7.1-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.12.0-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
+
+</div>
+
+# 🍎 Bad Apple - Neural Networks 🧠
+
+<div align="center">
+  
+![Inference Example](images/inference.png)
+  
+*Side-by-side comparison showing input (left), AI-generated frame (middle), and original frame (right)*
 
 </div>
 
