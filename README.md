@@ -11,6 +11,17 @@ This repository contains a complete pipeline for:
 2. Training a neural network model
 3. Using the model to play the upscaled video
 
+## Requirements
+```
+matplotlib==3.10.5
+numpy==2.2.6
+opencv-python==4.12.0.88
+pandas==2.3.1
+scikit-learn==1.7.1
+torch==2.7.1+cu128
+torchvision==0.22.1+cu128
+```
+
 ## Components
 
 ### Data Preparation
@@ -33,17 +44,22 @@ This repository contains a complete pipeline for:
 
 ## Usage
 
-1. **Prepare the dataset**:
+1. **Install Requirements**:
+   ```
+   pip install -r requirements.txt
+   ```
+
+2. **Prepare the dataset**:
    ```
    python datasetGenerator.py
    ```
 
-2. **Train the Model**:
+3. **Train the Model**:
    ```
    python trainCustomModel.py
    ```
 
-3. **Use the Model**:
+4. **Use the Model**:
    ```
    python AiVideoPlayer.py
    ```
