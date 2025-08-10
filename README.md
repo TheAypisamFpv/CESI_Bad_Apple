@@ -12,13 +12,13 @@
 
 ![Inference Example](images/inference_epoch_best.png)
 
-*Side-by-side comparison showing input (left), AI-generated frame (middle), and original frame (right)*
+*Side-by-side comparison showing input (left), AI-upscaled frame (middle), and original frame (right)*
 
 </div>
 
 ## 🌟 Project Overview
 
-This project uses **Neural Networks** to upscale and recreate "Bad Apple!!". The neural network is trained to transform low-resolution frames into higher resolution versions, allowing for playback of the video using AI-generated frames.
+This project uses **Neural Networks** to upscale and recreate "Bad Apple!!". The neural network is trained to transform low-resolution frames into higher resolution versions, allowing for playback of the video using AI-upscaled frames.
 
 <div align="left">
   
@@ -193,7 +193,7 @@ Training took 159 epochs (with early stopping callback), and achieved a satisfac
 ![Training Progress](images/inference_epoch_1.png)
 ![Training Progress](images/inference_epoch_best.png)
 
-*Input (left), AI-generated frame (middle), and original frame (right)*
+*Input (left), AI-upscaled frame (middle), and original frame (right)*
 
 </div>
 
