@@ -9,9 +9,9 @@
 # 🍎 Bad Apple - Neural Networks 🧠
 
 <div align="center">
-  
-![Inference Example](images/inference.png)
-  
+
+![Inference Example](images/inference_epoch_best.png)
+
 *Side-by-side comparison showing input (left), AI-generated frame (middle), and original frame (right)*
 
 </div>
@@ -89,10 +89,6 @@ torchvision==0.22.1+cu128
   <tr>
     <td><code>AiVideoPlayer.py</code></td>
     <td>Loads the trained model and plays back the Bad Apple animation by upscaling low-resolution frames</td>
-  </tr>
-  <tr>
-    <td><code>progressBar.py</code></td>
-    <td>Helper utility for displaying progress during training and processing</td>
   </tr>
 </table>
 
@@ -185,3 +181,20 @@ python AiVideoPlayer.py
 </table>
 
 The training process uses **MSE loss** and **Adam optimizer** to learn the mapping between low and high resolution frames.
+
+## 📊 Training Progress
+
+### Comparison between the first and best training epochs:
+
+Training took 159 epochs (with early stopping callback), and achieved a satisfactory level of detail in the upscaling process.
+
+<div align="center">
+
+![Training Progress](images/inference_epoch_1.png)
+![Training Progress](images/inference_epoch_best.png)
+
+*Input (left), AI-generated frame (middle), and original frame (right)*
+
+</div>
+
+Dramatic improvement from the first training epoch to the best performing epoch. Initially, the model produces blurry outputs with minimal detail, while the fully trained model generates sharper images with significantly better preservation of edges and contrast.
