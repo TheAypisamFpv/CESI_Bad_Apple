@@ -184,14 +184,21 @@ The training process uses **MSE loss** and **Adam optimizer** to learn the mappi
 
 ## 📊 Training Progress
 
-### Comparison between the first and best training epochs:
-
-Training took 159 epochs (with early stopping callback), and achieved a satisfactory level of detail in the upscaling process.
+### Loss and Accuracy curves
 
 <div align="center">
 
-![Training Progress](images/inference_epoch_1.png)
-![Training Progress](images/inference_epoch_best.png)
+![training History](models\BadAppleModel_48x36_To_480x360_conv\trainingHistory.png)
+
+</div>
+
+### Comparison between the first and best training epochs:
+
+
+<div align="center">
+
+![Training inference_epoch_1](images/inference_epoch_1.png)
+![Training inference_epoch_best](images/inference_epoch_best.png)
 
 *Input (left), AI-upscaled frame (middle), and original frame (right)*
 
