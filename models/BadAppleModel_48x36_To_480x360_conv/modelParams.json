@@ -1,0 +1,12 @@
+{
+    "inputSize": [
+        48,
+        36
+    ],
+    "outputSize": [
+        480,
+        360
+    ],
+    "useConvLayers": true,
+    "randomSeed": 42
+}

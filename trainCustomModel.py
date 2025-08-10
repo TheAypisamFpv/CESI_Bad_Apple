@@ -1,4 +1,4 @@
-import os
+import os, sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -12,6 +12,10 @@ import json
 from customModel import BadAppleModel
 from progressBar import getProgressBar, Style
 
+# Register the BadAppleModel class as safe for loading
+# This is required for PyTorch 2.6+ security features
+torch.serialization.add_safe_globals(['customModel.BadAppleModel'])
+
 # Set a random seed for reproducibility
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
@@ -20,14 +24,9 @@ torch.manual_seed(RANDOM_SEED)
 # Set torch to use the GPU if available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-def loadData(filepath):
-    print("Loading CSV data...", end=" ")
-    data = pd.read_csv(filepath)
-    print("done.")
-    return data
-
-def preprocessData(data):
+def preprocessData(data): 
     print("Preprocessing data...", end=" ")
+    sys.stdout.flush()
     
     # Convert string representation of lists to numpy arrays
     data['resizedFrameData'] = data['resizedFrameData'].apply(lambda x: np.fromstring(x.strip('[]'), sep=','))
@@ -39,7 +38,7 @@ def preprocessData(data):
     print(f"done. (data length: {len(data)})")
     return resizedFrameData, originalFrameData
 
-def trainModel(model, trainLoader, testLoader, criterion, optimizer, epochs, patience=10, savePath=None, modelHistoryPath=None):
+def trainModel(model, trainLoader, testLoader, criterion, optimizer, epochs, patience=10, savePath=None, modelHistoryPath=None, startEpoch=0, historyPath=None):
     """
     Train the model with early stopping based on validation loss.
     
@@ -52,26 +51,49 @@ def trainModel(model, trainLoader, testLoader, criterion, optimizer, epochs, pat
         epochs: Maximum number of epochs to train
         patience: Number of epochs to wait before early stopping
         savePath: Path to save the best model
+        modelHistoryPath: Path to save model checkpoints for each epoch
+        startEpoch: Starting epoch number (for continued training)
+        historyPath: Path to save/load training history CSV
         
     Returns:
         history: Dictionary containing training history
     """
     history = {
+        'epoch': [],
         'train_loss': [],
         'val_loss': [],
         'train_accuracy': [],
         'val_accuracy': []
     }
     
-    bestValLoss = float('inf')
+    # Load existing history if available
+    if historyPath and os.path.exists(historyPath):
+        try:
+            existingHistory = pd.read_csv(historyPath)
+            print(f"Loaded existing training history from {historyPath}")
+            history['train_loss'] = existingHistory['train_loss'].tolist()
+            history['val_loss'] = existingHistory['val_loss'].tolist()
+            history['train_accuracy'] = existingHistory['train_accuracy'].tolist()
+            history['val_accuracy'] = existingHistory['val_accuracy'].tolist()
+            
+            # Ensure we only keep history up to startEpoch
+            if len(history['train_loss']) > startEpoch:
+                for key in history:
+                    history[key] = history[key][:startEpoch]
+        except Exception as e:
+            print(f"Error loading history: {e}")
+    
+    bestValLoss = min(history['val_loss']) if history['val_loss'] else float('inf')
+    bestValAccuracy = max(history['val_accuracy']) if history['val_accuracy'] else 0.0
     bestModel = None
     counter = 0
-    correctThreshold = 0.05  # Same threshold used in trainNeuralNet.py
-    
+    correctThreshold = 0.1 # Threshold for considering a prediction correct (Error < 10%)
+
     trainingStartTime = time.time()
     
     for epoch in range(epochs):
-        print(f"\n\nEpoch {epoch + 1}/{epochs} - Training")
+        actualEpoch = startEpoch + epoch + 1
+        print(f"\n\nEpoch {actualEpoch}/{startEpoch + epochs} - Training")
         epochStartTime = time.time()
         
         # Training phase
@@ -97,7 +119,7 @@ def trainModel(model, trainLoader, testLoader, criterion, optimizer, epochs, pat
             testLoss += loss.item() * XBatch.size(0)
             avgTrainLoss = testLoss / (i + 1)
             
-            # Calculate accuracy (using threshold as in trainNeuralNet.py)
+            # Calculate accuracy
             with torch.no_grad():
                 outputs = torch.clamp(outputs, 0, 1)
                 errors = torch.abs(outputs - yBatch)
@@ -127,12 +149,11 @@ def trainModel(model, trainLoader, testLoader, criterion, optimizer, epochs, pat
             print(f"{getProgressBar(completion, wheelIndex=i, maxbarLength=50, style=Style.DOT_GRID)}-> Avg Train Loss and Accuracy: {avgTrainLoss:.4f} | {avgTrainAccuracy:.4f} - epoch train ETA: {epochEtaFormatted} - Training time: {trainingElapsedTimeFormatted}    ", end='\r')
 
         # Validation phase
-        print(f"\nEpoch {epoch + 1}/{epochs} - Validation")
+        print(f"\nEpoch {actualEpoch}/{startEpoch + epochs} - Validation")
         model.eval()
         valLoss = 0.0
         valCorrect = 0
         valTotal = 0
-        
         with torch.no_grad():
             for i, (XBatch, yBatch) in enumerate(testLoader):
                 completion = (i + 1) / len(testLoader)
@@ -170,17 +191,27 @@ def trainModel(model, trainLoader, testLoader, criterion, optimizer, epochs, pat
                 minutes, seconds = divmod(remainder, 60)
                 trainingElapsedTimeFormatted = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
-                print(f"{getProgressBar(completion, wheelIndex=i, maxbarLength=50, style=Style.DOT_GRID)}-> Avg Val Loss and Accuracy: {avgValLoss:.4f} (Best: {bestValLoss:.4f}) | {avgValAccuracy:.4f} - epoch val ETA: {epochEtaFormatted} - Training time: {trainingElapsedTimeFormatted}    ", end='\r')
+                print(f"{getProgressBar(completion, wheelIndex=i, maxbarLength=50, style=Style.DOT_GRID)}-> Avg Val Loss and Accuracy: {avgValLoss:.4f} (Best: {bestValLoss:.4f}) | {avgValAccuracy:.4f} (Best: {bestValAccuracy:.4f}) - epoch val ETA: {epochEtaFormatted} - Training time: {trainingElapsedTimeFormatted}    ", end='\r')
     
         # Save history
+        history['epoch'].append(actualEpoch)
         history['train_loss'].append(avgTrainLoss)
         history['val_loss'].append(avgValLoss)
         history['train_accuracy'].append(avgTrainAccuracy)
         history['val_accuracy'].append(avgValAccuracy)
 
-        # Early stopping
+        # Save history to CSV after each epoch
+        if historyPath:
+            historyDf = pd.DataFrame(history)
+            historyDf.to_csv(historyPath, index=False)
+
+        if avgValAccuracy > bestValAccuracy:
+            bestValAccuracy = avgValAccuracy
+
         if avgValLoss < bestValLoss:
             bestValLoss = avgValLoss
+
+        if avgValAccuracy == bestValAccuracy or avgValLoss == bestValLoss:
             bestModel = model.state_dict().copy()
             # save the best model
             if savePath is not None:
@@ -192,19 +223,21 @@ def trainModel(model, trainLoader, testLoader, criterion, optimizer, epochs, pat
         else:
             counter += 1
             
-        currentModelPath = os.path.join(modelHistoryPath, f"model_epoch_{epoch + 1}.pt")
+        # Save current epoch model
+        actualEpoch = startEpoch + epoch + 1
+        currentModelPath = os.path.join(modelHistoryPath, f"model_epoch_{actualEpoch}.pt")
         if savePath is not None:
             torch.save(model, currentModelPath)
         
-        
+        # Early stopping
         if counter >= patience:
-            print(f"\n\nEarly stopping at epoch {epoch+1}")
+            print(f"\n\nEarly stopping at epoch {actualEpoch}")
             break
         
     print("\nTraining complete")
     return history, bestModel
 
-def saveModelParams(model, inputSize, outputSize, useConvLayers, savePath):
+def saveModelParams(model, inputSize, outputSize, useConvLayers, randomSeed, savePath):
     """Save model parameters to a JSON file."""
     # Convert numpy types to native Python types
     if isinstance(inputSize, tuple):
@@ -216,7 +249,7 @@ def saveModelParams(model, inputSize, outputSize, useConvLayers, savePath):
         'inputSize': inputSize,
         'outputSize': outputSize,
         'useConvLayers': bool(useConvLayers),
-        'architecture': str(model)
+        'randomSeed': randomSeed
     }
     
     with open(savePath, 'w') as f:
@@ -228,10 +261,13 @@ def plotTrainingHistory(history, savePath=None):
     """Plot training history and optionally save it to a file."""
     plt.figure(figsize=(12, 5))
     
+    # Use epoch numbers for x-axis if available
+    epochs = history['epoch'] if 'epoch' in history else range(1, len(history['train_loss']) + 1)
+    
     # Plot loss
     plt.subplot(1, 2, 1)
-    plt.plot(history['train_loss'], label='Train Loss')
-    plt.plot(history['val_loss'], label='Validation Loss')
+    plt.plot(epochs, history['train_loss'], label='Train Loss')
+    plt.plot(epochs, history['val_loss'], label='Validation Loss')
     plt.title('Model Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
@@ -239,8 +275,8 @@ def plotTrainingHistory(history, savePath=None):
     
     # Plot accuracy
     plt.subplot(1, 2, 2)
-    plt.plot(history['train_accuracy'], label='Train Accuracy')
-    plt.plot(history['val_accuracy'], label='Validation Accuracy')
+    plt.plot(epochs, history['train_accuracy'], label='Train Accuracy')
+    plt.plot(epochs, history['val_accuracy'], label='Validation Accuracy')
     plt.title('Model Accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
@@ -256,18 +292,22 @@ def plotTrainingHistory(history, savePath=None):
 
 def main():
     # Parameters
-    batchSize = 96
-    epochs = 100
-    learningRate = 0.002
-    trainValSplit = 0.8 # 80% training, 20% validation
-    patience = 15
-    useConvLayers = True
+    BATCHSIZE = 96
+    EPOCHS = 100
+    LEARNINGRATE = 0.002
+    TRAINVALSPLIT = 0.8 # 80% training, 20% validation
+    PATIENCE = 15
+    USECONVLAYERS = True
+    
+    CONTINUETRAINING = True
+    PREVIOUSMODELPATH = r"C:\Users\Aypisam\Documents\Cesi\CESI_Bad_Apple\models\BadAppleModel_48x36_To_480x360_conv\trainingHistory\model_epoch_100.pt"  # Path to a model from a previous epoch to continue training
 
-    CsvDatasetRelativePath = "dataset\\48x36_To_480x360\\Bad Apple!!_48x36.csv"
+    CSVDATASETRELATIVEPATH = "dataset\\48x36_To_480x360\\Bad Apple!!_48x36.csv"
+
 
     # File paths
     rootDir = os.path.dirname(os.path.abspath(__file__))
-    datasetPath = os.path.join(rootDir, CsvDatasetRelativePath)
+    datasetPath = os.path.join(rootDir, CSVDATASETRELATIVEPATH)
 
     # Check if dataset exists
     if not os.path.isfile(datasetPath):
@@ -290,7 +330,10 @@ def main():
     outputNewFrameHeight = sizeData['outputNewFrameHeight'].values[0]
 
     # Load and preprocess data
-    data = loadData(datasetPath)
+    print("Loading CSV data...", end=" ")
+    data = pd.read_csv(datasetPath)
+    print("done.")
+    
     inputFrames, outputFrames = preprocessData(data)
     
     # Get input and output dimensions
@@ -301,24 +344,86 @@ def main():
     print(f"Output size: {outputNewFrameWidth}x{outputNewFrameHeight}")
 
     # Create model directory
-    modelDir = os.path.join(rootDir, "models", f"BadAppleModel_{initialNewFrameWidth}x{initialNewFrameHeight}_To_{outputNewFrameWidth}x{outputNewFrameHeight}_{'conv' if useConvLayers else 'dense'}")
-    os.makedirs(modelDir, exist_ok=True)
+    baseModelDir = os.path.join(rootDir, "models", f"BadAppleModel_{initialNewFrameWidth}x{initialNewFrameHeight}_To_{outputNewFrameWidth}x{outputNewFrameHeight}_{'conv' if USECONVLAYERS else 'dense'}")
+    
+    
+    # Create model
+    print("Creating model...")
+    model = BadAppleModel(inputSize=inputSize, outputSize=outputSize, useConvLayers=USECONVLAYERS)
+    model = model.to(device)
+    
+    # Define loss function and optimizer
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=LEARNINGRATE)
+    print()
+    
+    # Check if we're continuing training from an existing model
+    if CONTINUETRAINING and PREVIOUSMODELPATH and os.path.exists(PREVIOUSMODELPATH):
+        print(f"\nLoading previous model from '{PREVIOUSMODELPATH}'...")
+        try:
+            # Extract epoch number from filename if it follows the pattern model_epoch_X.pt
+            if "model_epoch_" in os.path.basename(PREVIOUSMODELPATH):
+                epochStr = os.path.basename(PREVIOUSMODELPATH).split("model_epoch_")[1].split(".pt")[0]
+                startEpoch = int(epochStr)
+                
+                modelDir = os.path.dirname(PREVIOUSMODELPATH).removesuffix("\\trainingHistory")
+                
+                print(f"Starting training from epoch {startEpoch + 1}")
+            else:
+                modelDir = os.path.dirname(PREVIOUSMODELPATH)
+
+            # Load the model with the appropriate settings for PyTorch 2.6+
+            try:
+                # First try with weights_only=True (safer, default in PyTorch 2.6+)
+                loadedModel = torch.load(PREVIOUSMODELPATH)
+                if isinstance(loadedModel, torch.nn.Module):
+                    model = loadedModel.to(device)
+                else:
+                    model.load_state_dict(loadedModel)
+                    model = model.to(device)
+            except Exception as load_error:
+                print(f"First load attempt failed: {load_error}")
+                print("Trying alternative loading method...")
+                
+                # Try with weights_only=False as fallback (less secure, but may work for older models)
+                loadedModel = torch.load(PREVIOUSMODELPATH, weights_only=False)
+                if isinstance(loadedModel, torch.nn.Module):
+                    model = loadedModel.to(device)
+                else:
+                    model.load_state_dict(loadedModel)
+                    model = model.to(device)
+                
+            # Create a new optimizer with the loaded model parameters
+            optimizer = optim.Adam(model.parameters(), lr=LEARNINGRATE)
+
+
+        except Exception as e:
+            print(f"Error loading previous model: {e}")
+            print("Starting training from scratch.")
+            startEpoch = 0
+    else:
+        # Check if directory already exists and increment number if needed
+        startEpoch = 0
+        counter = 0
+        modelDir = baseModelDir
+        while os.path.exists(modelDir):
+            counter += 1
+            modelDir = f"{baseModelDir}_{counter}"
+    
+        os.makedirs(modelDir, exist_ok=True)
+        print(f"Created model directory: {modelDir}")
     
     modelHistoryPath = os.path.join(modelDir, "trainingHistory")
     os.makedirs(modelHistoryPath, exist_ok=True)
     
-    # Create model
-    model = BadAppleModel(inputSize=inputSize, outputSize=outputSize, useConvLayers=useConvLayers)
-    model = model.to(device)
+
     
     # Print model summary
-    print("\nModel Architecture:")
-    print(model)
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     
     # Split data into training and validation sets
     XTrain, XTest, yTrain, yTest = train_test_split(
-        inputFrames, outputFrames, test_size=1-trainValSplit, random_state=RANDOM_SEED
+        inputFrames, outputFrames, test_size=1-TRAINVALSPLIT, random_state=RANDOM_SEED
     )
     
     # Create data loaders
@@ -333,16 +438,13 @@ def main():
     )
     
     trainLoader = DataLoader(
-        trainDataset, batch_size=batchSize, shuffle=True, pin_memory=True
+        trainDataset, batch_size=BATCHSIZE, shuffle=True, pin_memory=True
     )
     
     testLoader = DataLoader(
-        testDataset, batch_size=batchSize, shuffle=False, pin_memory=True
+        testDataset, batch_size=BATCHSIZE, shuffle=False, pin_memory=True
     )
     
-    # Define loss function and optimizer
-    criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=learningRate)
     
     # Check if GPU is available
     print("-" * 50)
@@ -381,6 +483,7 @@ def main():
     modelPath = os.path.join(modelDir, "badAppleModel.pt")
     paramsPath = os.path.join(modelDir, "modelParams.json")
     historyPlotPath = os.path.join(modelDir, "trainingHistory.png")
+    historyCSVPath = os.path.join(modelDir, "trainingHistory.csv")
     
     # Train the model
     history, trainedModel = trainModel(
@@ -389,10 +492,12 @@ def main():
         testLoader=testLoader,
         criterion=criterion,
         optimizer=optimizer,
-        epochs=epochs,
-        patience=patience,
+        epochs=EPOCHS,
+        patience=PATIENCE,
         savePath=modelPath,
-        modelHistoryPath=modelHistoryPath
+        modelHistoryPath=modelHistoryPath,
+        startEpoch=startEpoch,
+        historyPath=historyCSVPath
     )
     
     # Save model parameters
@@ -400,7 +505,8 @@ def main():
         model=trainedModel,
         inputSize=inputSize,
         outputSize=outputSize,
-        useConvLayers=useConvLayers,
+        useConvLayers=USECONVLAYERS,
+        randomSeed=RANDOM_SEED,
         savePath=paramsPath
     )
     

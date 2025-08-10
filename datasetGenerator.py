@@ -145,6 +145,6 @@ if __name__ == '__main__':
     rootDir = os.path.dirname(os.path.abspath(__file__))
     videoPath = 'Bad Apple!!.mp4'
     initialScalingFactor = 0.1
-    outputScalingFactor = 1
+    outputScalingFactor = 0.75
     frameSkip = 1 # 1: default
     videoToCsv(videoPath=videoPath, initialScalingFactor=initialScalingFactor, outputScalingFactor=outputScalingFactor, frameSkip=frameSkip)

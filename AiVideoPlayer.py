@@ -1,12 +1,9 @@
 import cv2
 import numpy as np
-import pandas as pd
 import torch
 import torch.serialization
 import time
 import os
-import csv
-import sys
 import queue
 import threading
 from customModel import BadAppleModel
@@ -15,58 +12,6 @@ from customModel import BadAppleModel
 DEFAULT_WIDTH = 480
 DEFAULT_HEIGHT = 360
 
-
-def parseFrameSeries(frame_str: str) -> np.ndarray:
-    """Parse a CSV cell containing a list-like string of numbers into a 1D numpy array.
-
-    This uses numpy.fromstring for speed and strips enclosing brackets if present.
-    """
-    # Guard against None or empty strings
-    if frame_str is None or frame_str == "":
-        return np.array([], dtype=np.float32)
-    s = frame_str.strip()
-    if s and s[0] == '[' and s[-1] == ']':
-        s = s[1:-1]
-    arr = np.fromstring(s, sep=',', dtype=np.float32)
-    return arr
-
-def streamFrames(datasetPath):
-    """
-    Stream frames from the dataset CSV without loading it entirely into memory.
-
-    Yields dictionaries with keys:
-      - 'resizedFrameData': 1D np.ndarray
-      - 'originalFrameData': 1D np.ndarray or None if column not present
-    """
-    EnsureCsvFieldSizeLimit()
-    with open(datasetPath, 'r', newline='') as f:
-        reader = csv.DictReader(f)
-        has_original = 'originalFrameData' in (reader.fieldnames or [])
-        for row in reader:
-            resized = parseFrameSeries(row.get('resizedFrameData'))
-            original = parseFrameSeries(row.get('originalFrameData')) if has_original else None
-            yield {
-                'resizedFrameData': resized,
-                'originalFrameData': original
-            }
-
-def EnsureCsvFieldSizeLimit():
-    """Increase the csv.field_size_limit to handle very large fields.
-
-    On some platforms, csv.field_size_limit(sys.maxsize) overflows; in that case,
-    progressively reduce the value until it is accepted.
-    """
-    max_int = sys.maxsize
-    while True:
-        try:
-            csv.field_size_limit(max_int)
-            break
-        except (OverflowError, ValueError):
-            max_int = int(max_int / 10)
-            if max_int <= 1024 * 1024:  # 1MB minimum safeguard
-                csv.field_size_limit(1024 * 1024)
-                break
-
 def displayFrame(frame, width, height, windowName='Video Frame'):
     """
     Display a frame in a window with the given name.
@@ -74,7 +19,6 @@ def displayFrame(frame, width, height, windowName='Video Frame'):
     # Reshape the frame to proper dimensions if it's flattened
     if len(frame.shape) == 1:
         # Try to determine the aspect ratio if not provided
-        # This is a simple approach - for more accurate dimensions, use sizeCsvPath
         side = int(np.sqrt(frame.shape[0]))
         frame = frame.reshape((side, frame.shape[0] // side))
     
@@ -92,40 +36,13 @@ def displayFrame(frame, width, height, windowName='Video Frame'):
     cv2.imshow(windowName, frame)
     return cv2.waitKey(1)  # Return key pressed (if any)
 
-def getFrameDimensions(sizeCsvPath=None):
+def playVideo(modelPath, videoPath, fps=30, displayWidth=DEFAULT_WIDTH, displayHeight=DEFAULT_HEIGHT):
     """
-    Load or infer frame dimensions.
-    
-    Args:
-        sizeCsvPath: Path to the CSV file containing frame dimensions
-        
-    Returns:
-        Tuple of (inputWidth, inputHeight, outputWidth, outputHeight)
-    """
-    if sizeCsvPath and os.path.exists(sizeCsvPath):
-        print(f"Loading frame dimensions from {sizeCsvPath}...", end="")
-        size_df = pd.read_csv(sizeCsvPath)
-        inputWidth = size_df['initialNewFrameWidth'].iloc[0]
-        inputHeight = size_df['initialNewFrameHeight'].iloc[0]
-        outputWidth = size_df['outputNewFrameWidth'].iloc[0]
-        outputHeight = size_df['outputNewFrameHeight'].iloc[0]
-        print("done.")
-    else:
-        # Default dimensions
-        print("Using default dimensions")
-        inputWidth, inputHeight = 24, 18
-        outputWidth, outputHeight = 120, 90
-    
-    return inputWidth, inputHeight, outputWidth, outputHeight
-
-def playVideo(modelPath, datasetPath, sizeCsvPath=None, fps=30, displayWidth=DEFAULT_WIDTH, displayHeight=DEFAULT_HEIGHT):
-    """
-    Play the Bad Apple animation using the trained model.
+    Play the Bad Apple animation using the trained model directly from video file.
     
     Args:
         modelPath: Path to the trained model file
-        datasetPath: Path to the dataset CSV file
-        sizeCsvPath: Path to the CSV file containing frame dimensions
+        videoPath: Path to the source video file
         fps: Frames per second for playback
         displayWidth: Width of the display window
         displayHeight: Height of the display window
@@ -148,13 +65,30 @@ def playVideo(modelPath, datasetPath, sizeCsvPath=None, fps=30, displayWidth=DEF
     model.eval()
     print("done.")
     
-    # Load frame dimensions
-    inputWidth, inputHeight, outputWidth, outputHeight = getFrameDimensions(sizeCsvPath)
-    print(f"Input dimensions: {inputWidth}x{inputHeight}")
-    print(f"Output dimensions: {outputWidth}x{outputHeight}")
+    # Get model input/output dimensions from the model itself
+    inputWidth, inputHeight = model.inputWidth, model.inputHeight
+    outputWidth, outputHeight = model.outputWidth, model.outputHeight
+    print(f"Model input dimensions: {inputWidth}x{inputHeight}")
+    print(f"Model output dimensions: {outputWidth}x{outputHeight}")
     
-    # Inform about streaming mode
-    print(f"Streaming frames from {datasetPath} with frame buffer")
+    # Open the video file
+    print(f"Opening video from {videoPath}...")
+    cap = cv2.VideoCapture(videoPath)
+    if not cap.isOpened():
+        print("Error: Could not open video file.")
+        return
+    
+    # Get video properties
+    originalFps = cap.get(cv2.CAP_PROP_FPS)
+    totalFrames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    originalWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    originalHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    print(f"Video properties: {originalWidth}x{originalHeight} at {originalFps:.2f} FPS, {totalFrames} frames")
+    
+    # Set playback FPS if not specified
+    if fps is None:
+        fps = originalFps
+    
     print("Display mode: Input | Prediction | Original")
     
     # Create a frame buffer using a queue and preload some frames
@@ -164,17 +98,34 @@ def playVideo(modelPath, datasetPath, sizeCsvPath=None, fps=30, displayWidth=DEF
     # Define a function to preload frames in a separate thread
     def frameLoader():
         frameCount = 0
-        for record in streamFrames(datasetPath):
-            if stopEvent.is_set():
+        while cap.isOpened() and not stopEvent.is_set():
+            ret, frame = cap.read()
+            if not ret:
+                # End of video
                 break
                 
-            # Skip empty frames
-            if record['resizedFrameData'].size == 0:
-                continue
-                
+            # Convert frame to grayscale
+            grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            
+            # Resize to model input dimensions
+            inputResized = cv2.resize(grayFrame, (inputWidth, inputHeight))
+            
+            # Normalize to [0,1]
+            inputNormalized = inputResized / 255.0
+            
+            # Flatten for model input
+            inputFlattened = inputNormalized.flatten()
+            
+            # Get original frame resized to output dimensions for comparison
+            originalResized = cv2.resize(grayFrame, (outputWidth, outputHeight))
+            originalNormalized = originalResized / 255.0
+            
             # Try to add the frame to the buffer, wait if buffer is full
             try:
-                frameBuffer.put(record, timeout=0.5)
+                frameBuffer.put({
+                    'input': inputFlattened,
+                    'original': originalNormalized
+                }, timeout=0.5)
                 frameCount += 1
             except queue.Full:
                 # If buffer is full, wait briefly before trying again
@@ -199,8 +150,23 @@ def playVideo(modelPath, datasetPath, sizeCsvPath=None, fps=30, displayWidth=DEF
     print(f" done. ({frameBuffer.qsize()} frames ready)")
     
     input("Press Enter to start the video...")
-    print()
-    
+    print("Starting video playback in 3s...", end="\r")
+    # Display a first frame to activate the display window
+    # Use a loop to keep the window responsive during countdown
+    startTime = time.time()
+    while time.time() - startTime < 3:
+        key = displayFrame(np.zeros((outputHeight, outputWidth * 3), dtype=np.float32),
+                           outputWidth * 3,
+                           outputHeight, 
+                           windowName='Bad Apple: Input | Prediction | Original')
+
+        print(f"Starting video playback in {3 - (time.time() - startTime):.1f}s...", end="\r")
+
+        # Small sleep to prevent CPU overuse
+        time.sleep(0.05)
+
+    print("\n\n")
+
     # Timing variables
     frameDuration = 1 / fps  # Target duration per frame in seconds
     frameId = 0
@@ -219,17 +185,16 @@ def playVideo(modelPath, datasetPath, sizeCsvPath=None, fps=30, displayWidth=DEF
             frameStartTime = time.time()
             
             # Get next frame from buffer
-            record = frameBuffer.get()
+            frameData = frameBuffer.get()
             
             # Check if we've reached the end of data
-            if record is None:
+            if frameData is None:
                 print("\nEnd of frames reached")
                 break
             
             # Get the input frame
-            inputFrame = record['resizedFrameData']
-            if inputFrame.size == 0:
-                continue
+            inputFrame = frameData['input']
+            originalFrame = frameData['original']
             
             # Convert to tensor for model input
             inputTensor = torch.tensor(inputFrame, dtype=torch.float32).unsqueeze(0).to(device)
@@ -241,25 +206,19 @@ def playVideo(modelPath, datasetPath, sizeCsvPath=None, fps=30, displayWidth=DEF
             # Reshape frames
             inputFrameReshaped = inputFrame.reshape((inputHeight, inputWidth))
             predictedFrame = prediction.reshape((outputHeight, outputWidth))
+            originalFrameReshaped = originalFrame.reshape((outputHeight, outputWidth))
             
-            # Get original frame if available
-            originalSeries = record.get('originalFrameData')
-            if originalSeries is not None and originalSeries.size > 0:
-                originalFrame = originalSeries.reshape((outputHeight, outputWidth))
-            else:
-                # If ground truth is not available, use a blank frame of the same size
-                originalFrame = np.zeros((outputHeight, outputWidth), dtype=np.float32)
-            
+            # Resize input to output dimensions for display
             inputResized = cv2.resize(inputFrameReshaped, (outputWidth, outputHeight))
             
             # Create a composite image with all three frames side by side
             # Border between frames
             borderWidth = 3
-            borderColor = 128
-            border = np.ones((outputHeight, borderWidth), dtype=np.float32) * (borderColor / 255.0)
+            borderGray = 128
+            border = np.ones((outputHeight, borderWidth), dtype=np.float32) * (borderGray / 255.0)
             
             # Combine frames horizontally: Input | Border | Prediction | Border | Original
-            combinedFrame = np.hstack([inputResized, border, predictedFrame, border, originalFrame])
+            combinedFrame = np.hstack([inputResized, border, predictedFrame, border, originalFrameReshaped])
             
             key = displayFrame(combinedFrame, 
                               width=(outputWidth * 3 + borderWidth * 2), 
@@ -293,12 +252,10 @@ def playVideo(modelPath, datasetPath, sizeCsvPath=None, fps=30, displayWidth=DEF
             
             # Print status
             currentTime = time.time()
-            # if currentTime >= nextFpsUpdate:
             bufferStatus = f"Buffer: {frameBuffer.qsize()}/{frameBuffer.maxsize}"
             processingTime = f"Processing: {processingTime*1000:.1f}ms"
             fpsStatus = f"FPS: {actualFps:.1f}"
-            print(f"Frame: {frameId+1}  |  {processingTime}  |  {fpsStatus}  |  {bufferStatus}", end='\r')
-            nextFpsUpdate = currentTime + fpsUpdateInterval
+            print(f"Frame: {frameId+1}/{totalFrames}  |  {processingTime}  |  {fpsStatus}  |  {bufferStatus}", end='\r')
             
             # Check for exit key (ESC or 'q')
             if key == 27 or key == ord('q'):
@@ -316,6 +273,9 @@ def playVideo(modelPath, datasetPath, sizeCsvPath=None, fps=30, displayWidth=DEF
         if loaderThread.is_alive():
             loaderThread.join(timeout=1.0)
         
+        # Release the video capture
+        cap.release()
+        
         # Show playback statistics
         totalTime = time.time() - videoStartTime
         avgFps = frameId / totalTime if totalTime > 0 else 0
@@ -326,9 +286,8 @@ def main():
     # Settings configured directly in the code
         
     # Common settings
-    modelPath = r"models\BadAppleModel_48x36_To_360x270_conv\badAppleModel_best.pt"
-    datasetPath = r"dataset\48x36_To_360x270\Bad Apple!!_48x36.csv"
-    sizeCsvPath = r"dataset\48x36_To_360x270\Bad Apple!!_size.csv"
+    modelPath = r"models\BadAppleModel_48x36_To_480x360_conv\badAppleModel_best.pt"
+    videoPath = r"Bad Apple!!.mp4"  # Direct path to the MP4 file
 
     # Play mode settings
     fps = 30
@@ -337,8 +296,7 @@ def main():
      
     playVideo(
         modelPath=modelPath,
-        datasetPath=datasetPath,
-        sizeCsvPath=sizeCsvPath,
+        videoPath=videoPath,
         fps=fps,
         displayWidth=displayWidth,
         displayHeight=displayHeight

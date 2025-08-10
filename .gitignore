@@ -1,6 +1,8 @@
 **.mp4
 **.pkl
-**.pt
+
+# Model Checkpoints
+models/BadAppleModel_**x**_To_**x**_conv*/trainingHistory/**.pt
 
 # Virtual Environment
 /.venv
@@ -8,5 +10,5 @@
 # Python cache
 __pycache__/
 
-# csv files
-**.csv
+# Dataset files
+dataset/**x**_To_**x**/**.csv
