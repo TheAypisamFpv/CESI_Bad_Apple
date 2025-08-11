@@ -69,6 +69,4 @@ Implementation of a temporal graph to visualize each frame as a node, with edges
 
 Neural networks designed to upscale the Bad Apple video from a low resolution of 48x36 pixels to a higher resolution of 480x360 pixels.
 
-![Bad Apple GIF](https://github.com/TheAypisamFpv/CESI_Bad_Apple/raw/AI/models/BadAppleModel_48x36_To_480x360_conv/BadApple_output.gif)
-
 **Original CESI project:** [AI-Project](https://github.com/TheAypisamFpv/AI-Project)
