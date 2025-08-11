@@ -195,7 +195,7 @@ The training process uses **MSE loss** and **Adam optimizer** to learn the mappi
 
 <div align="center">
 
-![training History](models\BadAppleModel_48x36_To_480x360_conv\trainingHistory.png)
+![training History](models/BadAppleModel_48x36_To_480x360_conv/trainingHistory.png)
 
 </div>
 
