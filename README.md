@@ -206,14 +206,19 @@ The training process uses **MSE loss** and **Adam optimizer** to learn the mappi
 
 <div align="center">
 
-![Training inference_epoch_1](images/inference_epoch_1.png)
-![Training inference_epoch_best](images/inference_epoch_best.png)
-
-<div style="display: flex; justify-content: space-between; width: 100%; text-align: center; margin: 0 auto;">
-  <span style="flex: 1;">input</span>
-  <span style="flex: 1;">AI-upscaled</span>
-  <span style="flex: 1;">original frame</span>
-</div>
+<table>
+  <tr>
+    <th colspan="3" align="center"><img src="images/inference_epoch_1.png" alt="Training inference_epoch_1"/></th>
+  </tr>
+  <tr>
+    <th colspan="3" align="center"><img src="images/inference_epoch_best.png" alt="Training inference_epoch_best"/></th>
+  </tr>
+  <tr>
+    <td align="center">‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ input‎ ‎ ‎ ‎ ‎ ‎ ‎ </td>
+    <td align="center">AI-upscaled‎‎‎ ‎ ‎ </td>
+    <td align="center">original frame</td>
+  </tr>
+</table>
 
 ---
 
