@@ -10,9 +10,13 @@
 
 <div align="center">
 
-![Inference Example](images/inference_epoch_best.png)
+![Bad Apple GIF](models/BadAppleModel_48x36_To_480x360_conv/BadApple_output.gif)
 
-*Side-by-side comparison showing input (left), AI-upscaled frame (middle), and original frame (right)*
+<div style="display: flex; justify-content: space-between; width: 100%; text-align: center; margin: 0 auto;">
+  <span style="flex: 1;">input</span>
+  <span style="flex: 1;">AI-upscaled</span>
+  <span style="flex: 1;">original frame</span>
+</div>
 
 </div>
 
@@ -192,6 +196,8 @@ The training process uses **MSE loss** and **Adam optimizer** to learn the mappi
 
 </div>
 
+---
+
 ### Comparison between the first and best training epochs:
 
 
@@ -200,8 +206,16 @@ The training process uses **MSE loss** and **Adam optimizer** to learn the mappi
 ![Training inference_epoch_1](images/inference_epoch_1.png)
 ![Training inference_epoch_best](images/inference_epoch_best.png)
 
-*Input (left), AI-upscaled frame (middle), and original frame (right)*
+<div style="display: flex; justify-content: space-between; width: 100%; text-align: center; margin: 0 auto;">
+  <span style="flex: 1;">input</span>
+  <span style="flex: 1;">AI-upscaled</span>
+  <span style="flex: 1;">original frame</span>
+</div>
+
+---
 
 </div>
 
-Dramatic improvement from the first training epoch to the best performing epoch. Initially, the model produces blurry outputs with minimal detail, while the fully trained model generates sharper images with significantly better preservation of edges and contrast.
+The comparison shows notable model improvements. The first epoch yields a blurry, pixelated upscaled frame with indistinct features like the chain and even the face, resembling the low-res input.
+
+By the best epoch, the image gains sharp edges and clear details, the model is able to reconstruct chain links and facial features based off almost no information.

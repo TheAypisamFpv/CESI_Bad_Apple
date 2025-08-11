@@ -36,7 +36,7 @@ def displayFrame(frame, width, height, windowName='Video Frame'):
     cv2.imshow(windowName, frame)
     return cv2.waitKey(1)  # Return key pressed (if any)
 
-def playVideo(modelPath, videoPath, fps=30, displayWidth=DEFAULT_WIDTH, displayHeight=DEFAULT_HEIGHT):
+def playVideo(modelPath, videoPath, fps=30, displayWidth=DEFAULT_WIDTH, displayHeight=DEFAULT_HEIGHT, saveVideo=False):
     """
     Play the Bad Apple animation using the trained model directly from video file.
     
@@ -46,6 +46,7 @@ def playVideo(modelPath, videoPath, fps=30, displayWidth=DEFAULT_WIDTH, displayH
         fps: Frames per second for playback
         displayWidth: Width of the display window
         displayHeight: Height of the display window
+        saveVideo: If True, saves the output video in the same directory as the model
     """
     # Load model
     print(f"Loading model from {modelPath}...", end="")
@@ -84,6 +85,24 @@ def playVideo(modelPath, videoPath, fps=30, displayWidth=DEFAULT_WIDTH, displayH
     originalWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     originalHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     print(f"Video properties: {originalWidth}x{originalHeight} at {originalFps:.2f} FPS, {totalFrames} frames")
+    
+    # Set up video writer if saveVideo is True
+    videoWriter = None
+    if saveVideo:
+        # Create output directory in the same folder as the model
+        modelDir = os.path.dirname(modelPath)
+        outputVideoPath = os.path.join(modelDir, "badapple_output.mp4")
+
+        # Define the codec and create VideoWriter object
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        videoWriter = cv2.VideoWriter(
+            outputVideoPath,
+            fourcc,
+            fps,
+            ((outputWidth * 3 + 2 * 3), outputHeight),  # Width includes 3 frames and 2 borders
+            isColor=True
+        )
+        print(f"Video will be saved to: {outputVideoPath}")
     
     # Set playback FPS if not specified
     if fps is None:
@@ -172,7 +191,7 @@ def playVideo(modelPath, videoPath, fps=30, displayWidth=DEFAULT_WIDTH, displayH
     frameId = 0
     videoStartTime = time.time()  # Overall video start time
     frameStartTime = videoStartTime  # Start time for current frame
-    fpsUpdateInterval = 0.5  # Update FPS display every 0.5 seconds
+    fpsUpdateInterval = 10  # Update FPS display every 10 frames
     nextFpsUpdate = videoStartTime + fpsUpdateInterval
     
     # Track recent frame times for averaging FPS
@@ -225,19 +244,25 @@ def playVideo(modelPath, videoPath, fps=30, displayWidth=DEFAULT_WIDTH, displayH
                               height=outputHeight,
                               windowName='Bad Apple: Input | Prediction | Original')
             
+            # Save frame to video if enabled
+            if saveVideo and videoWriter is not None:
+                # Convert to uint8 for video writing (0-255 range)
+                frameToSave = (combinedFrame * 255).astype(np.uint8)
+                # Convert grayscale to BGR (3-channel) for video writing
+                frameToSaveBgr = cv2.cvtColor(frameToSave, cv2.COLOR_GRAY2BGR)
+                videoWriter.write(frameToSaveBgr)
+            
             # Track frame processing time for FPS calculation
             processingTime = time.time() - frameStartTime
             
             # Calculate when this frame should be shown to maintain target FPS
             targetFrameTime = videoStartTime + (frameId * frameDuration)
-            currentTime = time.time()
             
             # Time to wait to maintain target FPS
-            sleepTime = max(0, targetFrameTime - currentTime)
+            sleepTime = max(0, targetFrameTime - time.time())
             
             if sleepTime > 0:
                 time.sleep(sleepTime)
-                
             # Calculate actual frame time including sleep
             totalFrameTime = time.time() - frameStartTime
             frameTimes.append(totalFrameTime)
@@ -250,13 +275,10 @@ def playVideo(modelPath, videoPath, fps=30, displayWidth=DEFAULT_WIDTH, displayH
             avgFrameTime = sum(frameTimes) / len(frameTimes)
             actualFps = 1.0 / avgFrameTime if avgFrameTime > 0 else 0
             
-            # Print status
-            currentTime = time.time()
-            bufferStatus = f"Buffer: {frameBuffer.qsize()}/{frameBuffer.maxsize}"
-            processingTime = f"Processing: {processingTime*1000:.1f}ms"
-            fpsStatus = f"FPS: {actualFps:.1f}"
-            print(f"Frame: {frameId+1}/{totalFrames}  |  {processingTime}  |  {fpsStatus}  |  {bufferStatus}", end='\r')
-            
+            # Print status            
+            if frameId % fpsUpdateInterval < 0.1:
+                print(f"Frame: {frameId+1}/{totalFrames}  |  Processing: {processingTime*1000:.1f}ms  |  FPS: {actualFps:.1f}/{fps:.1f}  |  Buffer: {frameBuffer.qsize()}/{frameBuffer.maxsize}     ", end='\r')
+
             # Check for exit key (ESC or 'q')
             if key == 27 or key == ord('q'):
                 print("\nPlayback stopped by user.")
@@ -273,8 +295,11 @@ def playVideo(modelPath, videoPath, fps=30, displayWidth=DEFAULT_WIDTH, displayH
         if loaderThread.is_alive():
             loaderThread.join(timeout=1.0)
         
-        # Release the video capture
+        # Release the video capture and writer
         cap.release()
+        if saveVideo and videoWriter is not None:
+            videoWriter.release()
+            print(f"Video saved successfully.")
         
         # Show playback statistics
         totalTime = time.time() - videoStartTime
@@ -293,13 +318,15 @@ def main():
     fps = 30
     displayWidth = DEFAULT_WIDTH
     displayHeight = DEFAULT_HEIGHT
+    saveVideo = True  # Set to True to save the output video
      
     playVideo(
         modelPath=modelPath,
         videoPath=videoPath,
         fps=fps,
         displayWidth=displayWidth,
-        displayHeight=displayHeight
+        displayHeight=displayHeight,
+        saveVideo=saveVideo
     )
 
 

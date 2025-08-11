@@ -18,6 +18,8 @@ def getProgressBar(completion: float, wheelIndex=None, style=None, maxbarLength=
     Returns:
         str: Formatted progress bar string
     """
+
+    completion = min(max(completion, 0.0), 1.0)
     # Default style to BLOCK if None
     if style is None:
         style = Style.BLOCK
