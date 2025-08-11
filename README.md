@@ -10,13 +10,14 @@
 
 <div align="center">
 
-![Bad Apple GIF](models/BadAppleModel_48x36_To_480x360_conv/BadApple_output.gif)
-
 <table>
   <tr>
-    <td>input</td>
-    <td>AI-upscaled</td>
-    <td>original frame</td>
+    <th colspan="3" align="center"><img src="models/BadAppleModel_48x36_To_480x360_conv/BadApple_output.gif" alt="Bad Apple GIF" /></th>
+  </tr>
+  <tr>
+    <td align="center">‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ input‎ ‎ ‎ ‎ ‎ ‎ ‎ </td>
+    <td align="center">AI-upscaled‎‎‎ ‎ ‎ </td>
+    <td align="center">original frame</td>
   </tr>
 </table>
 
@@ -35,7 +36,7 @@ This project uses **Neural Networks** to upscale and recreate "Bad Apple!!". The
 This repository contains a complete pipeline for:
 1. 🎬 Converting video frames to features
 2. 🔄 Training a custom neural network model
-3. ▶️ Using the model to play the upscaled video
+3. ▶ Using the model to play the upscaled video
 
 ## 📦 Requirements
 
