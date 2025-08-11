@@ -12,7 +12,7 @@
 
 ![Bad Apple GIF](models/BadAppleModel_48x36_To_480x360_conv/BadApple_output.gif)
 
-<div style="display: flex; justify-content: space-between; width: 100%; text-align: center; margin: 0 auto;">
+<div style="display: flex; justify-content: space-between; max-width: 724px; text-align: center; margin: 0 auto;">
   <span style="flex: 1;">input</span>
   <span style="flex: 1;">AI-upscaled</span>
   <span style="flex: 1;">original frame</span>
