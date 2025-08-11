@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import time
 import json
 from customModel import BadAppleModel
-from progressBar import getProgressBar, Style
+from progressBar import *
 
 # Register the BadAppleModel class as safe for loading
 # This is required for PyTorch 2.6+ security features

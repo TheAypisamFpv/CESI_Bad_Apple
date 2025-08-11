@@ -1,11 +1,8 @@
-import time
-
-
 class Style:
     BLOCK = 0
     DOT_GRID = 1
 
-def getProgressBar(completion: float, wheelIndex=None, style=None, maxbarLength=75):
+def getProgressBar(completion: float, wheelIndex: int=None, style: int=Style.BLOCK, maxbarLength: int=50) -> str:
     """
     Generate a progress bar with optional style selection.
     
@@ -13,15 +10,30 @@ def getProgressBar(completion: float, wheelIndex=None, style=None, maxbarLength=
         completion (float): Progress completion between 0.0 and 1.0
         wheelIndex (int): Optional index for progress wheel animation
         style (int): Optional style parameter, defaults to Style.BLOCK
-        maxbarLength (int): Maximum length of the progress bar
+        maxbarLength (int): Optional maximum length of the progress bar
     
     Returns:
         str: Formatted progress bar string
+    
+    ## Usage:
+        Always use with carriage return when printing to create an updating effect:
+        print(getProgressBar(0.5), end='\\r')
+        
+        Example in a loop:
+    ```
+    for i, item in enumerate(items):
+        completion = i / len(items)
+        print(getProgressBar(completion, wheelIndex=i), end='\\r')
+    ```
+            
+    ## Note:
+        Includes a space character at the end of the progress bar.
     """
 
     completion = min(max(completion, 0.0), 1.0)
+    
     # Default style to BLOCK if None
-    if style is None:
+    if style not in Style.__dict__.values():
         style = Style.BLOCK
     
     # ANSI color codes
@@ -45,51 +57,57 @@ def getProgressBar(completion: float, wheelIndex=None, style=None, maxbarLength=
     if style == Style.BLOCK:  # BLOCK style
         fullBlocks = int(completion * maxbarLength)
         partialBlock = (completion * maxbarLength - fullBlocks)
-        bar = "█" * fullBlocks
+        progressBar = "█" * fullBlocks
         if partialBlock > 0:
             if partialBlock < 0.125:
-                bar += "▏"
+                progressBar += "▏"
             elif partialBlock < 0.25:
-                bar += "▎"
+                progressBar += "▎"
             elif partialBlock < 0.375:
-                bar += "▍"
+                progressBar += "▍"
             elif partialBlock < 0.5:
-                bar += "▌"
+                progressBar += "▌"
             elif partialBlock < 0.625:
-                bar += "▋"
+                progressBar += "▋"
             elif partialBlock < 0.75:
-                bar += "▊"
+                progressBar += "▊"
             elif partialBlock < 0.875:
-                bar += "▉"
+                progressBar += "▉"
             else:
-                bar += "█"
-        bar = bar.ljust(maxbarLength)
-        return f"Progress: [{bar}] {completionPercent:>6}%  {wheelChar}  "
-    
+                progressBar += "█"
+                
+        progressBar = f"[{progressBar.ljust(maxbarLength)}]"
+        
     elif style == Style.DOT_GRID:  # DOT_GRID style
         maxbarLength = maxbarLength + 2
         filledDots = round(completion * maxbarLength)
         # Construct bar with colored colons
         progressBarPart = ORANGE + ":" * filledDots
         backgroundPart = GRAY + ":" * (maxbarLength - filledDots)
-        bar = progressBarPart + backgroundPart + RESET
+        
+        progressBar = progressBarPart + backgroundPart + RESET
 
-        return f"Progress: {bar} {completionPercent:>6}%  {wheelChar}  "
+    return f"Progress: {progressBar} {completionPercent:>6}%  {wheelChar}  "
+
 
 # Example usage
+
+# Uncomment to see examples in action
 # if __name__ == "__main__":
-#     # Default block style
-#     # for i in range(501):
-#     #     progress = i / 500
-#     #     print(getProgressBar(progress, wheelIndex=i), end='\r')
-#     #     time.sleep(0.03)
-
-#     # print()
-
-#     # Dot grid style
-#     for i in range(501):
-#         progress = i / 500
-#         print(getProgressBar(progress, wheelIndex=i, style=Style.BLOCK), end='\r')
-#         time.sleep(0.03)
-
-#     print()
+#     import time
+#   
+#     # Default block style example
+#     print("Example with default block style:")
+#     for i in range(1001):
+#         progress = i / 1000
+#         print(getProgressBar(progress, wheelIndex=i), end='\r')
+#         time.sleep(0.01)
+#     print("\n")
+#   
+#     # Dot grid style example
+#     print("Example with dot grid style:")
+#     for i in range(1001):
+#         progress = i / 1000
+#         print(getProgressBar(progress, style=Style.DOT_GRID), end='\r')
+#         time.sleep(0.01)
+#     print("\n")
