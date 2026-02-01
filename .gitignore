@@ -12,3 +12,6 @@ __pycache__/
 
 # Dataset files
 dataset/**x**_To_**x**/**.csv
+
+# vs code settings
+.vscode/

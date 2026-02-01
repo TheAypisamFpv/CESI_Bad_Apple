@@ -9,12 +9,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import json
-from customModel import BadAppleModel
+from customModel import BadAppleRRDBModel, createBadAppleRRDBModel
 from progressBar import *
 
-# Register the BadAppleModel class as safe for loading
+# Register the BadAppleRRDBModel class as safe for loading
 # This is required for PyTorch 2.6+ security features
-torch.serialization.add_safe_globals(['customModel.BadAppleModel'])
+torch.serialization.add_safe_globals(['customModel.BadAppleRRDBModel'])
 
 # Set a random seed for reproducibility
 RANDOM_SEED = 42
@@ -237,7 +237,7 @@ def trainModel(model, trainLoader, testLoader, criterion, optimizer, epochs, pat
     print("\nTraining complete")
     return history, bestModel
 
-def saveModelParams(model, inputSize, outputSize, useConvLayers, randomSeed, savePath):
+def saveModelParams(model, inputSize, outputSize, randomSeed, savePath):
     """Save model parameters to a JSON file."""
     # Convert numpy types to native Python types
     if isinstance(inputSize, tuple):
@@ -248,7 +248,9 @@ def saveModelParams(model, inputSize, outputSize, useConvLayers, randomSeed, sav
     params = {
         'inputSize': inputSize,
         'outputSize': outputSize,
-        'useConvLayers': bool(useConvLayers),
+        'numBlocks': getattr(model, 'numBlocks', 6),
+        'baseChannels': getattr(model, 'baseChannels', 64),
+        'growth': getattr(model, 'growth', 32),
         'randomSeed': randomSeed
     }
     
@@ -299,7 +301,7 @@ def main():
     PATIENCE = 15
     USECONVLAYERS = True
     
-    CONTINUETRAINING = True
+    CONTINUETRAINING = False
     PREVIOUSMODELPATH = r"C:\Users\Aypisam\Documents\Cesi\CESI_Bad_Apple\models\BadAppleModel_48x36_To_480x360_conv\trainingHistory\model_epoch_100.pt"  # Path to a model from a previous epoch to continue training
 
     CSVDATASETRELATIVEPATH = "dataset\\48x36_To_480x360\\Bad Apple!!_48x36.csv"
@@ -349,8 +351,7 @@ def main():
     
     # Create model
     print("Creating model...")
-    model = BadAppleModel(inputSize=inputSize, outputSize=outputSize, useConvLayers=USECONVLAYERS)
-    model = model.to(device)
+    model = createBadAppleRRDBModel(inputSize, outputSize, device)
     
     # Define loss function and optimizer
     criterion = nn.MSELoss()
@@ -505,7 +506,6 @@ def main():
         model=trainedModel,
         inputSize=inputSize,
         outputSize=outputSize,
-        useConvLayers=USECONVLAYERS,
         randomSeed=RANDOM_SEED,
         savePath=paramsPath
     )

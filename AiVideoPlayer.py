@@ -6,7 +6,7 @@ import time
 import os
 import queue
 import threading
-from customModel import BadAppleModel
+from customModel import BadAppleRRDBModel
 
 # Default display dimensions
 DEFAULT_WIDTH = 480
@@ -52,8 +52,8 @@ def playVideo(modelPath, videoPath, fps=30, displayWidth=DEFAULT_WIDTH, displayH
     print(f"Loading model from {modelPath}...", end="")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    # Add BadAppleModel to safe globals for loading
-    torch.serialization.add_safe_globals(['customModel.BadAppleModel'])
+    # Add BadAppleRRDBModel to safe globals for loading
+    torch.serialization.add_safe_globals(['customModel.BadAppleRRDBModel'])
     
     try:
         # Try loading with weights_only=True (secure but might fail)
